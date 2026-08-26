@@ -1,5 +1,7 @@
 # 調査結果の詳細
 
+> **2026-08-26追補:** Androidライブ配信のディスクリプタ、HLS URL、CENC/CBCSシグナリングは追加調査で確定した。詳細は[Androidアプリ静的・動的解析](android-app-analysis.md)を参照。Web/VODとAndroidライブは配信経路が異なるため、結果を混同しないこと。
+
 検証日時: 2026-08-26 (JST)
 対象: NHK ONE ニュース動画 `https://www.web.nhk/tv/pl/series-tep-WP56ZZMRQ3/ep/RM1ZY9WR96`
 （2026年8月25日午後11:40 ニュース・気象情報、VOD、約10分）
@@ -85,14 +87,12 @@ JS から以下のトークン構成が判明:
 - `https://a.authz.ac1.nhk`（accountless abroad）
 - `https://d.authz.ac1.nhk`（emergency）
 
-## 6. 未完了の項目
+## 6. 現在の整理
 
-1. ストリーム情報 API（`manifests[0].url` を返す API）のエンドポイント特定
-2. authz トークンの発行方法（ブラウザの Cookie から取得するのが現実的）
-3. MPD マニフェストの取得と PSSH 抽出
-4. CDM デバイスファイル（.wvd）の用意（KeyDive 等で Android デバイスから抽出）
-5. ライセンスサーバーへの問い合わせと鍵取得
-6. コンテンツの復号（mp4decrypt / ffmpeg）
+1. Androidライブのストリーム情報APIと最終HLS URLは特定済み。
+2. CENC/WidevineとCBCS/FairPlayの暗号化シグナリングを確認済み。
+3. Web/VOD固有の認可付きディスクリプタはAndroidライブとは別経路であり、引き続き区別して扱う。
+4. CDM秘密情報、コンテンツ鍵の抽出、ライセンス応答の保存、コンテンツ復号は本調査の対象外であり実施していない。
 
 ## 7. 使用したツール・リソース
 
@@ -104,6 +104,6 @@ JS から以下のトークン構成が判明:
 
 ## 8. 参考情報
 
-- NHK プラスのライブ配信は MPEG-DASH（`.../live/1031/cenc/fmp4/manifest.mpd` 形式）
-- Widevine L3 鍵抽出ツール: KeyDive（Android + frida-server + root 必須）
-- pywidevine: Google Widevine CDM の Python 実装（PSSH 生成・解析、ライセンス問い合わせ）
+- Androidライブは検証時点でHLS + fMP4を使用していた。
+- Widevine経路は`SAMPLE-AES-CTR` / `cenc`、FairPlay経路は`SAMPLE-AES` / `cbcs`だった。
+- 詳細な再現可能データは`evidence/android-live-manifest-summary.json`を参照。

@@ -1,0 +1,338 @@
+{
+  "measuredAt": "2026-08-26T10:30:41+09:00",
+  "scope": "manifest and DRM signaling metadata only; no media segments, licenses, or content keys fetched",
+  "channels": {
+    "G1": {
+      "descriptorUrl": "https://simul2.hsk.st.nhk/npd4/7fe0-0400/simul/videoinfo.json",
+      "descriptorHttpStatus": 200,
+      "manifestCount": 24,
+      "drmCounts": {
+        "cenc": 12,
+        "cbcs": 12
+      },
+      "bitrateLimitTypes": [
+        "m0192",
+        "m0384",
+        "m0768",
+        "m1500",
+        "m3000",
+        "m6000",
+        "s0192",
+        "s0384",
+        "s0768",
+        "s1500",
+        "s3000",
+        "s6000"
+      ],
+      "samples": {
+        "cenc": {
+          "masterUrl": "https://simul2.hsk.st.nhk/npd4/7fe0-0400/simul/cenc/manifest_m3000.m3u8",
+          "masterHttpStatus": 200,
+          "masterVersion": "4",
+          "selectedVariantUrl": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/v3000/playlist.m3u8",
+          "selectedVariantHttpStatus": 200,
+          "bandwidth": 3192000,
+          "codecs": "mp4a.40.2,avc1.4d001f",
+          "frameRate": "29.970",
+          "targetDurationSeconds": 7,
+          "mediaSegmentExtension": [
+            "m4s"
+          ],
+          "mediaSegmentCountObserved": 4,
+          "keyMethod": "SAMPLE-AES-CTR",
+          "keyFormat": "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+          "keyFormatVersion": "1",
+          "keyUriScheme": "data",
+          "keyUriPayloadRedacted": true,
+          "initPath": "/npd4/vs1a/7fe0-0400/cenc/v3000/init_1003.mp4",
+          "initHttpStatus": 200,
+          "initBytes": 950,
+          "initSchemeTypes": [
+            "cenc"
+          ],
+          "psshSystemIds": [
+            "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"
+          ],
+          "encryptedSampleEntryPresent": true
+        },
+        "cbcs": {
+          "masterUrl": "https://simul2.hsk.st.nhk/npd4/7fe0-0400/simul/cbcs/manifest_m3000.m3u8",
+          "masterHttpStatus": 200,
+          "masterVersion": "4",
+          "selectedVariantUrl": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cbcs/v3000/playlist.m3u8",
+          "selectedVariantHttpStatus": 200,
+          "bandwidth": 3192000,
+          "codecs": "mp4a.40.2,avc1.4d001f",
+          "frameRate": "29.970",
+          "targetDurationSeconds": 7,
+          "mediaSegmentExtension": [
+            "m4s"
+          ],
+          "mediaSegmentCountObserved": 4,
+          "keyMethod": "SAMPLE-AES",
+          "keyFormat": "com.apple.streamingkeydelivery",
+          "keyFormatVersion": "1",
+          "keyUriScheme": "skd",
+          "keyUriPayloadRedacted": true,
+          "initPath": "/npd4/vs1a/7fe0-0400/cbcs/v3000/init_1003.mp4",
+          "initHttpStatus": 200,
+          "initBytes": 875,
+          "initSchemeTypes": [
+            "cbcs"
+          ],
+          "psshSystemIds": [],
+          "encryptedSampleEntryPresent": true
+        }
+      }
+    },
+    "G2": {
+      "descriptorUrl": "https://simul2.hsk.st.nhk/npd4/7fe0-0401/simul/videoinfo.json",
+      "descriptorHttpStatus": 200,
+      "manifestCount": 24,
+      "drmCounts": {
+        "cenc": 12,
+        "cbcs": 12
+      },
+      "bitrateLimitTypes": [
+        "m0192",
+        "m0384",
+        "m0768",
+        "m1500",
+        "m3000",
+        "m6000",
+        "s0192",
+        "s0384",
+        "s0768",
+        "s1500",
+        "s3000",
+        "s6000"
+      ],
+      "samples": {
+        "cenc": {
+          "masterUrl": "https://simul2.hsk.st.nhk/npd4/7fe0-0401/simul/cenc/manifest_m3000.m3u8",
+          "masterHttpStatus": 200,
+          "masterVersion": "4",
+          "selectedVariantUrl": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0401/simul/cenc/v3000/playlist.m3u8",
+          "selectedVariantHttpStatus": 200,
+          "bandwidth": 3192000,
+          "codecs": "mp4a.40.2,avc1.4d001f",
+          "frameRate": "29.970",
+          "targetDurationSeconds": 7,
+          "mediaSegmentExtension": [
+            "m4s"
+          ],
+          "mediaSegmentCountObserved": 4,
+          "keyMethod": "SAMPLE-AES-CTR",
+          "keyFormat": "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+          "keyFormatVersion": "1",
+          "keyUriScheme": "data",
+          "keyUriPayloadRedacted": true,
+          "initPath": "/npd4/vs1a/7fe0-0401/cenc/v3000/init_1003.mp4",
+          "initHttpStatus": 200,
+          "initBytes": 950,
+          "initSchemeTypes": [
+            "cenc"
+          ],
+          "psshSystemIds": [
+            "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"
+          ],
+          "encryptedSampleEntryPresent": true
+        },
+        "cbcs": {
+          "masterUrl": "https://simul2.hsk.st.nhk/npd4/7fe0-0401/simul/cbcs/manifest_m3000.m3u8",
+          "masterHttpStatus": 200,
+          "masterVersion": "4",
+          "selectedVariantUrl": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0401/simul/cbcs/v3000/playlist.m3u8",
+          "selectedVariantHttpStatus": 200,
+          "bandwidth": 3192000,
+          "codecs": "mp4a.40.2,avc1.4d001f",
+          "frameRate": "29.970",
+          "targetDurationSeconds": 7,
+          "mediaSegmentExtension": [
+            "m4s"
+          ],
+          "mediaSegmentCountObserved": 4,
+          "keyMethod": "SAMPLE-AES",
+          "keyFormat": "com.apple.streamingkeydelivery",
+          "keyFormatVersion": "1",
+          "keyUriScheme": "skd",
+          "keyUriPayloadRedacted": true,
+          "initPath": "/npd4/vs1a/7fe0-0401/cbcs/v3000/init_1003.mp4",
+          "initHttpStatus": 200,
+          "initBytes": 875,
+          "initSchemeTypes": [
+            "cbcs"
+          ],
+          "psshSystemIds": [],
+          "encryptedSampleEntryPresent": true
+        }
+      }
+    },
+    "E1": {
+      "descriptorUrl": "https://simul2.hsk.st.nhk/npd4/7fe1-0408/simul/videoinfo.json",
+      "descriptorHttpStatus": 200,
+      "manifestCount": 24,
+      "drmCounts": {
+        "cenc": 12,
+        "cbcs": 12
+      },
+      "bitrateLimitTypes": [
+        "m0192",
+        "m0384",
+        "m0768",
+        "m1500",
+        "m3000",
+        "m6000",
+        "s0192",
+        "s0384",
+        "s0768",
+        "s1500",
+        "s3000",
+        "s6000"
+      ],
+      "samples": {
+        "cenc": {
+          "masterUrl": "https://simul2.hsk.st.nhk/npd4/7fe1-0408/simul/cenc/manifest_m3000.m3u8",
+          "masterHttpStatus": 200,
+          "masterVersion": "4",
+          "selectedVariantUrl": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe1-0408/simul/cenc/v3000/playlist.m3u8",
+          "selectedVariantHttpStatus": 200,
+          "bandwidth": 3192000,
+          "codecs": "mp4a.40.2,avc1.4d001f",
+          "frameRate": "29.970",
+          "targetDurationSeconds": 7,
+          "mediaSegmentExtension": [
+            "m4s"
+          ],
+          "mediaSegmentCountObserved": 4,
+          "keyMethod": "SAMPLE-AES-CTR",
+          "keyFormat": "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+          "keyFormatVersion": "1",
+          "keyUriScheme": "data",
+          "keyUriPayloadRedacted": true,
+          "initPath": "/npd4/vs1a/7fe1-0408/cenc/v3000/init_1003.mp4",
+          "initHttpStatus": 200,
+          "initBytes": 950,
+          "initSchemeTypes": [
+            "cenc"
+          ],
+          "psshSystemIds": [
+            "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"
+          ],
+          "encryptedSampleEntryPresent": true
+        },
+        "cbcs": {
+          "masterUrl": "https://simul2.hsk.st.nhk/npd4/7fe1-0408/simul/cbcs/manifest_m3000.m3u8",
+          "masterHttpStatus": 200,
+          "masterVersion": "4",
+          "selectedVariantUrl": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe1-0408/simul/cbcs/v3000/playlist.m3u8",
+          "selectedVariantHttpStatus": 200,
+          "bandwidth": 3192000,
+          "codecs": "mp4a.40.2,avc1.4d001f",
+          "frameRate": "29.970",
+          "targetDurationSeconds": 7,
+          "mediaSegmentExtension": [
+            "m4s"
+          ],
+          "mediaSegmentCountObserved": 4,
+          "keyMethod": "SAMPLE-AES",
+          "keyFormat": "com.apple.streamingkeydelivery",
+          "keyFormatVersion": "1",
+          "keyUriScheme": "skd",
+          "keyUriPayloadRedacted": true,
+          "initPath": "/npd4/vs1a/7fe1-0408/cbcs/v3000/init_1003.mp4",
+          "initHttpStatus": 200,
+          "initBytes": 875,
+          "initSchemeTypes": [
+            "cbcs"
+          ],
+          "psshSystemIds": [],
+          "encryptedSampleEntryPresent": true
+        }
+      }
+    },
+    "E3": {
+      "descriptorUrl": "https://simul2.hsk.st.nhk/npd4/7fe1-040a/simul/videoinfo.json",
+      "descriptorHttpStatus": 200,
+      "manifestCount": 24,
+      "drmCounts": {
+        "cenc": 12,
+        "cbcs": 12
+      },
+      "bitrateLimitTypes": [
+        "m0192",
+        "m0384",
+        "m0768",
+        "m1500",
+        "m3000",
+        "m6000",
+        "s0192",
+        "s0384",
+        "s0768",
+        "s1500",
+        "s3000",
+        "s6000"
+      ],
+      "samples": {
+        "cenc": {
+          "masterUrl": "https://simul2.hsk.st.nhk/npd4/7fe1-040a/simul/cenc/manifest_m3000.m3u8",
+          "masterHttpStatus": 200,
+          "masterVersion": "4",
+          "selectedVariantUrl": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe1-040a/simul/cenc/v3000/playlist.m3u8",
+          "selectedVariantHttpStatus": 200,
+          "bandwidth": 3192000,
+          "codecs": "mp4a.40.2,avc1.4d001f",
+          "frameRate": "29.970",
+          "targetDurationSeconds": 7,
+          "mediaSegmentExtension": [
+            "m4s"
+          ],
+          "mediaSegmentCountObserved": 4,
+          "keyMethod": "SAMPLE-AES-CTR",
+          "keyFormat": "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+          "keyFormatVersion": "1",
+          "keyUriScheme": "data",
+          "keyUriPayloadRedacted": true,
+          "initPath": "/npd4/vs1a/7fe1-040a/cenc/v3000/init_1003.mp4",
+          "initHttpStatus": 200,
+          "initBytes": 950,
+          "initSchemeTypes": [
+            "cenc"
+          ],
+          "psshSystemIds": [
+            "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"
+          ],
+          "encryptedSampleEntryPresent": true
+        },
+        "cbcs": {
+          "masterUrl": "https://simul2.hsk.st.nhk/npd4/7fe1-040a/simul/cbcs/manifest_m3000.m3u8",
+          "masterHttpStatus": 200,
+          "masterVersion": "4",
+          "selectedVariantUrl": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe1-040a/simul/cbcs/v3000/playlist.m3u8",
+          "selectedVariantHttpStatus": 200,
+          "bandwidth": 3192000,
+          "codecs": "mp4a.40.2,avc1.4d001f",
+          "frameRate": "29.970",
+          "targetDurationSeconds": 7,
+          "mediaSegmentExtension": [
+            "m4s"
+          ],
+          "mediaSegmentCountObserved": 4,
+          "keyMethod": "SAMPLE-AES",
+          "keyFormat": "com.apple.streamingkeydelivery",
+          "keyFormatVersion": "1",
+          "keyUriScheme": "skd",
+          "keyUriPayloadRedacted": true,
+          "initPath": "/npd4/vs1a/7fe1-040a/cbcs/v3000/init_1003.mp4",
+          "initHttpStatus": 200,
+          "initBytes": 875,
+          "initSchemeTypes": [
+            "cbcs"
+          ],
+          "psshSystemIds": [],
+          "encryptedSampleEntryPresent": true
+        }
+      }
+    }
+  }
+}
