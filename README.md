@@ -60,6 +60,47 @@ python3 scripts/05-download-encrypted-vod.py \
 
 出力は`ftyp`/`encv`/`schm=cenc`/`tenc`/`pssh`を含む暗号化fMP4であり、メディアセグメントは`styp`/`moof`/`senc`構造のままです（復号は行いません）。
 
+## WVDファイルを使った復号ダウンロード
+
+Widevine L3 CDMデバイスファイル（`.wvd`）とBearerトークンがあれば、暗号化セグメントをダウンロードして復号し、再生可能なMP4を出力できます。
+
+```bash
+pip install pywidevine  # 必須
+
+# マスタープレイリストから自動選択してダウンロード＋復号
+python3 scripts/06-decrypt-vod.py \
+  --master '<master-playlist-url>' \
+  --wvd device.wvd \
+  --bearer-token '<token>' \
+  --output output.mp4
+
+# 映像・音声プレイリストを個別指定
+python3 scripts/06-decrypt-vod.py \
+  --video-playlist '<video-playlist-url>' \
+  --audio-playlist '<audio-playlist-url>' \
+  --wvd device.wvd \
+  --bearer-token '<token>' \
+  --output output.mp4
+
+# 字幕も一緒に取得してMP4へ mux
+python3 scripts/06-decrypt-vod.py \
+  --master '<master-playlist-url>' \
+  --wvd device.wvd \
+  --bearer-token '<token>' \
+  --output output.mp4 \
+  --concat-subtitles subtitles.vtt
+
+# テスト用に先頭3セグメントのみ
+python3 scripts/06-decrypt-vod.py \
+  --master '<master-playlist-url>' \
+  --wvd device.wvd \
+  --bearer-token '<token>' \
+  --output test.mp4 \
+  --max-segments 3
+```
+
+フロー: initセグメントからWidevine PSSHを抽出 → pywidevineでライセンスチャレンジを生成 → NHKのライセンスサーバーへPOST → 鍵を取得 → FFmpegの`-decryption_key`で復号・映像音声をマージ。`--master`指定時は映像・音声・字幕プレイリストを自動検出します。
+
 
 ## 注意
 

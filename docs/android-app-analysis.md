@@ -284,6 +284,23 @@ VOD init segmentの構造:
 音声（`am192`）やCBCS経路（`cbcs/v1500`など）も同じ手順で取得できる。
 
 字幕も同時に取得できる。`--subtitle-playlist`に字幕プレイリストURLを渡すとWebVTTセグメントを保存し、`--concat-subtitles`で1つの`.vtt`に結合する（先頭の`WEBVTT`ヘッダーは1つに揃え、各セグメントの`X-TIMESTAMP-MAP`を保持）。`--master`指定時はマスターの`#EXT-X-MEDIA:TYPE=SUBTITLES`から字幕プレイリストを自動検出して取得する。字幕セグメントは暗号化されていない。
+## 10.9 WVDファイルによる復号ダウンロード
+
+`scripts/06-decrypt-vod.py`は、`.wvd` Widevine L3デバイスファイルとBearerトークンを用いて暗号化VODをダウンロード・復号し、再生可能なMP4を出力する。danime-downloader（`pywidevine` + FFmpeg `-decryption_key`）の手法をNHK ONEのHLS構造に適用した。
+
+処理フロー:
+
+1. 映像・音声プレイリストから暗号化セグメントをダウンロード
+2. initセグメントからWidevine PSSHボックスを抽出（SystemID `edef8ba9-...`でフィルタ）
+3. `pywidevine`の`Cdm`/`Device`/`PSSH`でライセンスチャレンジを生成
+4. チャレンジを`https://licence.hsk.st.nhk/widevine/license`へ`Authorization: Bearer <token>`付きでPOST
+5. ライセンスレスポンスを`cdm.parse_license()`で解析しCONTENT鍵を取得
+6. FFmpegの`-decryption_key <key>`で連結fMP4を復号し、映像・音声をMP4へマージ
+
+`--master`指定時は`#EXT-X-STREAM-INF`から最高ビットレートの映像、`#EXT-X-MEDIA:TYPE=AUDIO`から主音声、`TYPE=SUBTITLES`から字幕を自動選択する。字幕は`mov_text`でMP4へmux可能。
+
+検証: initセグメントからWidevine PSSHボックスを2個抽出できることを確認済み（各65バイト、SystemID一致）。
+
 
 ## 7. DRM・認証フロー
 
