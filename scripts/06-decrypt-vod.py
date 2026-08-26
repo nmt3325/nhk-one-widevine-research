@@ -431,19 +431,95 @@ def decrypt_and_merge(video_files, audio_files, video_key, audio_key, output_pat
     return True
 
 
+VTT_TIME_RE = re.compile(r"^(?:(\d+):)?(\d{1,2}):(\d{2})\.(\d{3})")
+
+
+def parse_vtt_time(t):
+    """Parse a WebVTT timestamp to milliseconds."""
+    m = VTT_TIME_RE.match(t.strip())
+    if not m:
+        return None
+    hours = int(m.group(1) or 0)
+    minutes = int(m.group(2))
+    seconds = int(m.group(3))
+    millis = int(m.group(4))
+    return ((hours * 60 + minutes) * 60 + seconds) * 1000 + millis
+
+
+def format_vtt_time(ms):
+    """Format milliseconds as a WebVTT timestamp (HH:MM:SS.mmm)."""
+    if ms < 0:
+        ms = 0
+    hours = ms // 3600000
+    ms %= 3600000
+    minutes = ms // 60000
+    ms %= 60000
+    seconds = ms // 1000
+    millis = ms % 1000
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{millis:03d}"
+
+
 def merge_vtt(segment_texts):
-    out = ["WEBVTT", ""]
+    """Merge VTT segments and rebase cue times so the first cue starts at 00:00.
+
+    NHK ONE subtitle segments carry absolute broadcast timestamps (e.g.
+    409:32:25.543) plus X-TIMESTAMP-MAP headers. When muxed into MP4 those
+    absolute times leave subtitles invisible, so we drop the mapping headers
+    and shift every cue by the offset of the earliest cue.
+    """
+    cue_blocks = []
     for text in segment_texts:
         lines = text.replace("\r\n", "\n").split("\n")
         i = 0
         if lines and lines[0].startswith("WEBVTT"):
             i = 1
-        body = lines[i:]
-        while body and body[0] == "":
-            body = body[1:]
-        out.extend(body)
-        if out and out[-1] != "":
-            out.append("")
+        block = []
+        for line in lines[i:] + [""]:
+            stripped = line.strip()
+            if stripped == "":
+                if block:
+                    cue_blocks.append(block)
+                    block = []
+                continue
+            if stripped.startswith(("X-TIMESTAMP-MAP", "NOTE", "STYLE", "REGION")):
+                continue
+            block.append(line)
+        if block:
+            cue_blocks.append(block)
+
+    # Find the earliest cue start across all segments.
+    earliest = None
+    for block in cue_blocks:
+        for line in block:
+            if "-->" in line:
+                t = parse_vtt_time(line.split("-->")[0])
+                if t is not None and (earliest is None or t < earliest):
+                    earliest = t
+                break
+    if earliest is None:
+        earliest = 0
+
+    out = ["WEBVTT", ""]
+    for block in cue_blocks:
+        new_block = []
+        for line in block:
+            if "-->" in line:
+                parts = line.split("-->", 1)
+                start_ms = parse_vtt_time(parts[0])
+                end_and_settings = parts[1].strip()
+                em = VTT_TIME_RE.match(end_and_settings)
+                if start_ms is not None and em:
+                    end_ms = parse_vtt_time(end_and_settings)
+                    settings = end_and_settings[em.end():]
+                    line = (
+                        format_vtt_time(start_ms - earliest)
+                        + " --> "
+                        + format_vtt_time(end_ms - earliest)
+                        + settings
+                    )
+            new_block.append(line)
+        out.extend(new_block)
+        out.append("")
     return "\n".join(out).rstrip() + "\n"
 
 
