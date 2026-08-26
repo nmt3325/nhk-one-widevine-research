@@ -129,6 +129,13 @@ frida -U -f nhk.app.tep --runtime=v8 -l scripts/07-extract-token.js
 
 出力される `Bearer eyJ...` 形式の文字列をそのまま `--bearer-token` に渡してください（`Bearer ` プレフィックスも含めて指定可能です）。
 
+**方法: ブラウザのDevTools（F12）から取得（Web版）**
+
+1. ChromeでNHK ONEのエピソードページを開き、F12 → Network タブ
+2. 再生ボタンを押す
+3. `api.web.nhk` へのリクエストを選び、Request Headers の `Authorization: Bearer eyJ...` をコピー
+   （Application → Cookies → `z_at` の値でも同じトークンが取得できます）
+
 ### 入力ソースの解決フロー
 
 1. **`--url`**: 番組ページURLからエピソードIDを抽出し、`api.web.nhk/r8/t/tvepisode/te/{id}.json`でエピソード情報を取得。`video[0].detailedVideoDescriptor`からdescriptor URLを取得する。このフィールドは認証が必要な場合がある
@@ -137,6 +144,34 @@ frida -U -f nhk.app.tep --runtime=v8 -l scripts/07-extract-token.js
 4. **`--video-playlist` + `--audio-playlist`**: メディアプレイリストを個別指定
 
 フロー: initセグメントからWidevine PSSHを抽出 → pywidevineでライセンスチャレンジを生成 → NHKのライセンスサーバーへPOST → 鍵を取得 → FFmpegの`-decryption_key`で復号・映像音声をマージ。`--master`指定時は映像・音声・字幕プレイリストを自動検出します。
+
+## Web版スクリプト（Playwright不要の純CLI）
+
+`scripts/08-web-decrypt-vod.js`は`06-decrypt-vod.py`のWeb版で、AndroidエミュレーターやFridaなしで動作します。Node.jsの標準ライブラリのみ使用（npm install不要）。BearerトークンはブラウザのF12から手動取得します。
+
+```bash
+# エピソードURLから自動解決してダウンロード＋復号
+node scripts/08-web-decrypt-vod.js \
+  --url 'https://www.web.nhk/tv/pl/series-tep-XXX/ep/YYY' \
+  --bearer-token 'eyJ...' \
+  --wvd device.wvd --output output.mp4
+
+# F12でコピーしたマスタープレイリストURLを直接指定
+node scripts/08-web-decrypt-vod.js \
+  --master 'https://archive2.hsk.st.nhk/.../cenc/manifest_m6000.m3u8' \
+  --bearer-token 'eyJ...' --wvd device.wvd --output output.mp4
+
+# ダウンロードのみ（復号しない場合はトークン不要）
+node scripts/08-web-decrypt-vod.js \
+  --master 'https://archive2.hsk.st.nhk/.../cenc/manifest_m6000.m3u8' \
+  --max-segments 3
+```
+
+認証まわりの仕様（2026-08-26時点の実測）:
+
+- `api.web.nhk`: 有効なBearerトークン付きでのみ`detailedVideoDescriptor`フィールドを返す（認証なしでも200だが同フィールドなし）
+- CDN（`archive2.hsk.st.nhk`）: セグメント・マニフェストは認証なしで配信される。無効なトークンを送ると400で拒否されるため、CDNリクエストにはAuthorizationを付けない
+- ライセンスサーバー（`licence.hsk.st.nhk`）: Bearerトークン必須
 
 
 ## 注意
