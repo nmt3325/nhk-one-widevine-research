@@ -308,6 +308,10 @@ VOD init segmentの構造:
 
 検証: initセグメントからWidevine PSSHボックスを2個抽出できることを確認済み（各65バイト、SystemID一致）。descriptor URLから24マニフェスト（CENC 12 / CBCS 12）を検出し、CENC m6000を自動選択できることを確認済み。
 
+### bearer-tokenの取得
+
+スクリプト`scripts/07-extract-token.js`を使い、実行中のNHK ONEアプリからFrida経由で`UserAuthManager.getCurrentMainAccessTokenHeaderValue()`を呼び出して取得する。トークンは匿名アカウントでも発行され、有効期限は約8時間。取得した`Bearer eyJ...`形式の文字列をそのまま`--bearer-token`に指定する。
+
 注意: 公開（未認証）の`api.web.nhk`レスポンスには`detailedVideoDescriptor`が含まれない場合がある。その場合は`--descriptor-url`で直接指定するか、`--bearer-token`で有効な認証トークンを渡す必要がある。
 
 

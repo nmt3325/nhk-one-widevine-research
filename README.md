@@ -113,6 +113,22 @@ python3 scripts/06-decrypt-vod.py \
   --max-segments 3
 ```
 
+### bearer-tokenの取得方法
+
+`--bearer-token`にはNHK ONEアプリが発行するアクセストークン（JWT）を指定します。匿名アカウントでも発行されます。有効期限は約8時間です。
+
+**方法: Fridaで実行中のアプリから取得**
+
+```bash
+# アプリを起動した状態で、Fridaでトークンを抽出
+frida -U -p <nhk_app_pid> --runtime=v8 -l scripts/07-extract-token.js
+
+# またはアプリをspawnする場合
+frida -U -f nhk.app.tep --runtime=v8 -l scripts/07-extract-token.js
+```
+
+出力される `Bearer eyJ...` 形式の文字列をそのまま `--bearer-token` に渡してください（`Bearer ` プレフィックスも含めて指定可能です）。
+
 ### 入力ソースの解決フロー
 
 1. **`--url`**: 番組ページURLからエピソードIDを抽出し、`api.web.nhk/r8/t/tvepisode/te/{id}.json`でエピソード情報を取得。`video[0].detailedVideoDescriptor`からdescriptor URLを取得する。このフィールドは認証が必要な場合がある
