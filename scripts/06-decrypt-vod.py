@@ -76,7 +76,7 @@ UA = "NHKONE-Android/1.1.9"
 
 def fetch(url, dest=None, bearer_token=None):
     headers = {"User-Agent": UA}
-    if bearer_token:
+    if bearer_token and any(h in url for h in ("api.web.nhk", "licence.hsk.st.nhk")):
         headers["Authorization"] = f"Bearer {bearer_token}"
     req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=60) as r:
@@ -231,7 +231,7 @@ def parse_descriptor(descriptor_url, bearer_token=None):
     """Fetch a video descriptor JSON and return (master_url, info_dict)."""
     print(f"  Fetching descriptor...")
     try:
-        data = json.loads(fetch(descriptor_url, bearer_token=bearer_token))
+        data = json.loads(fetch(descriptor_url))
     except Exception as e:
         print(f"  Error fetching descriptor: {e}")
         return None, None
@@ -384,12 +384,13 @@ def decrypt_and_merge(video_files, audio_files, keys, output_path, subtitle_path
         "-i", v_concat,
         "-decryption_key", content_key,
         "-i", a_concat,
-        "-c", "copy",
-        "-map", "0:v:0",
-        "-map", "1:a:0",
     ]
     if subtitle_path and os.path.exists(subtitle_path):
-        cmd.extend(["-i", subtitle_path, "-map", "2:s:0", "-c:s", "mov_text"])
+        cmd.extend(["-i", subtitle_path])
+    cmd.extend(["-map", "0:v:0", "-map", "1:a:0"])
+    if subtitle_path and os.path.exists(subtitle_path):
+        cmd.extend(["-map", "2:s:0", "-c:s", "mov_text"])
+    cmd.extend(["-c:v", "copy", "-c:a", "copy"])
     cmd.append(output_path)
 
     print("  Running FFmpeg...")
