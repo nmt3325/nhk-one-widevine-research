@@ -137,12 +137,14 @@ frida -U -f nhk.app.tep --runtime=v8 -l scripts/07-extract-token.js
 
 出力される `Bearer eyJ...` 形式の文字列をそのまま `--bearer-token` に渡してください（`Bearer ` プレフィックスも含めて指定可能です）。
 
-**方法: ブラウザのDevTools（F12）から取得（Web版）**
+**方法: ブラウザのDevToolsコンソールから取得（Web版・最も簡単）**
 
-1. ChromeでNHK ONEのエピソードページを開き、F12 → Network タブ
-2. 再生ボタンを押す
-3. `api.web.nhk` へのリクエストを選び、Request Headers の `Authorization: Bearer eyJ...` をコピー
-   （Application → Cookies → `z_at` の値でも同じトークンが取得できます）
+1. ChromeでNHK ONEのエピソードページを開き、再生ボタンを押す
+2. F12 → Console タブを開き、`scripts/09-get-token-console.js` の内容を全てペーストして Enter
+   （初回は「allow pasting」と入力してペーストを許可）
+3. `Bearer eyJ...` がクリップボードにコピーされ、有効期限も表示される
+
+トークンはHttpOnlyでない `z_at` Cookieに格納されているため、`document.cookie`から直接読めます。手動で取る場合: Network タブで `api.web.nhk` へのリクエストの Request Headers にある `Authorization: Bearer eyJ...` をコピー、または Application → Cookies → `z_at` の値を使用。
 
 ### 入力ソースの解決フロー
 
