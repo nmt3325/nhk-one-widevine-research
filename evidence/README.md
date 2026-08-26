@@ -10,6 +10,8 @@
 
 `stream-details.json` / `stream-details2.json` / `stream-details3.json`は、字幕・DASH・DRCS・`control.json`・`need_L1_hd`・DVR・VODパスの追加調査記録です。
 
+`dynamic-playback.json`は、日本経由でアプリのライブ再生を実行した際の実測記録（選択プレイリスト、ライセンス要求、L3フォールバック挙動）です。
+
 含むもの:
 
 - 公開ディスクリプタ／HLS URL

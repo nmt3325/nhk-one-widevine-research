@@ -1,0 +1,25 @@
+{
+  "measuredAt": "2026-08-26T11:42:28+09:00",
+  "device": "Android 14 emulator (Widevine L3)",
+  "egress": "Japan (Tailscale exit node)",
+  "descriptorFetchedByApp": "https://simul2.hsk.st.nhk/npd4/7fe0-0400/simul/videoinfo.json",
+  "descriptorFetchCount": 10,
+  "appSelectedVideoPlaylist": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/v1500/playlist.m3u8",
+  "appSelectedAudioPlaylist": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/am192/playlist.m3u8",
+  "otherPlaylistsObserved": [
+    "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/v0768/playlist.m3u8",
+    "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/am064/playlist.m3u8"
+  ],
+  "mediaSegmentsObserved": true,
+  "drm": {
+    "keySystem": "Widevine",
+    "licenseUrl": "https://licence.hsk.st.nhk/widevine/license",
+    "licenseRequestMethod": "POST",
+    "getKeyRequestSecurityLevel": "L3"
+  },
+  "authz": {
+    "tokenEndpoint": "https://r.authz.ac1.nhk/idp/token",
+    "videoTokenHookFired": true
+  },
+  "l3FallbackObservation": "need_L1_hd=true のディスクリプタで、L3エミュレーター上ではアプリが v1500（540p）を選択した。1500超（720p/1080p）は選択されなかった。"
+}

@@ -229,6 +229,23 @@ G1 `m3000`の初期化セグメントから復元した実コーデック設定:
 - DASH: アプリコードに`.mpd`参照はなく、`.mpd`パスは403。このアプリはHLS専用
 - VOD: `archive2.hsk.st.nhk`上のディスクリプタは認証なしでは403。VODのディスクリプタURLはAPI応答の`detailedVideoDescriptor`フィールドで配布され、認証フローが必要
 
+## 10.6 動的再生の実測（アプリ実挙動）
+
+日本経由でオンボーディングを完了し、ホーム画面のライブ再生を実行した。Fridaトレーサーが記録したアプリの実挙動:
+
+| 項目 | 実測値 |
+| --- | --- |
+| ディスクリプタ取得 | `https://simul2.hsk.st.nhk/npd4/7fe0-0400/simul/videoinfo.json`（10回） |
+| 選択された映像プレイリスト | `.../simul/cenc/v1500/playlist.m3u8`（540p） |
+| 選択された音声プレイリスト | `.../simul/cenc/am192/playlist.m3u8` |
+| その他の観測プレイリスト | `v0768`（360p）、`am064` |
+| DRM | Widevine、`getKeyRequest`のsecurityLevel=`L3` |
+| ライセンス要求 | `POST https://licence.hsk.st.nhk/widevine/license` |
+| 認可トークン | `POST https://r.authz.ac1.nhk/idp/token`、`VideoTokenResult.getToken`発火 |
+| メディアセグメント | `.m4s`を継続取得（再生成功） |
+
+重要な確認: `need_L1_hd=true`の配信で、**L3エミュレーターではアプリが自動的にv1500（540p）を選択**した。1500超（720p/1080p）は選択されなかった。これは6.9のL3フォールバックロジックと動的に一致する。
+
 ## 7. DRM・認証フロー
 
 静的解析で確認した処理:
