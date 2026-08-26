@@ -45,7 +45,7 @@
 - `cbcs`: 12件
 - `bitrate_limit_type`: `m6000`, `m3000`, `m1500`, `m0768`, `m0384`, `m0192`, `s6000`, `s3000`, `s1500`, `s0768`, `s0384`, `s0192`
 
-`m`と`s`の接頭辞の意味は、今回の計測だけでは断定していない。
+各ディスクリプタには`manifests`以外に次のフィールドがある。\n\n- `need_L1_hd`: `true`（G1・G2・E1・E3すべて）\n- `allow_multispeed`: `false`\n\n`m`/`s`接頭辞は、アプリ内の`BitrateLimitType.isMulti`（先頭`m`ならmulti）で区別される。実測でも`m3000`は複数音声グループ（`l2`=am064, `l4`=am192）を持ち、`s3000`は単一音声グループ（`l0`=am192）のみを持つ。つまり`m`=multi（複数音声）、`s`=single（単一音声）である。
 
 ## 4. 最終HLS URL
 
@@ -173,6 +173,56 @@ G1の`cenc`/`cbcs`それぞれの映像・音声初期化セグメント（`init
 つまり、映像・音声とも**CBCS（AES-CBC、constant IV + サブサンプル暗号化）+ FairPlay SPC**である。
 
 `tenc`内のflags直後には2バイトのフィールドがあり、cencでは`0x0000`、cbcsでは`0x0019`だった。`0x19`はcrypt:skipパターン`1:9`（4bit+4bit）の表現と一致するが、仕様上の位置とは異なるため、ベンダー拡張の可能性を含めて「パターン関連フィールド」として記録する。
+
+## 6.6 セグメントレベルの暗号化（senc/saiz/saio）
+
+メディアセグメント（`.m4s`）の`moof`/`traf`内を解析した。トップレベルは`styp`+`sidx`+`moof`、`traf`内は`tfhd`/`tfdt`/`trun`/`saiz`/`saio`/`senc`。
+
+### cenc（Widevine）
+
+- `senc` flags=2（サブサンプルあり）、sampleCount=1
+- サンプル毎IV: 16バイト（`tenc`の`perSampleIvSize=16`と一致）
+- サブサンプル: clear 137バイト + protected 89,504バイト
+
+### cbcs（FairPlay）
+
+- `senc` flags=2、sampleCount=1
+- サンプル毎IVなし（`tenc`のconstant IV 16バイトを使用）
+- サブサンプル: clear 35バイト + protected 89,606バイト
+
+つまり両方式とも**サブサンプル暗号化**（NALヘッダー等の平文部を残し、ペイロードのみ暗号化）が使われている。
+
+## 6.7 コーデック設定（avcC / esds）
+
+G1 `m3000`の初期化セグメントから復元した実コーデック設定:
+
+| 項目 | 値 |
+| --- | --- |
+| 映像 | H.264 Main profile（`avcProfileIndication=0x4D`）、level 3.1（`0x1F`） |
+| 解像度 | 1280×720（SPSから復元。`m3000`=720pのマッピングと一致） |
+| NAL length size | 4バイト |
+| 音声 | AAC-LC（audioObjectType=2）、48kHz、ステレオ |
+| 音声ES最大ビットレート | 192,000（`am192`） |
+
+## 6.8 字幕・DRCS・control.json
+
+- 字幕プレイリスト: `https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/subtl/playlist.m3u8`
+- 字幕セグメントは**WebVTT**（`WEBVTT`ヘッダー、`.vtt`ファイル）。暗号化なし
+- DRCS文字置換テーブル: `https://archive2.hsk.st.nhk/npd4/config/drcs-subst.json`（3,752エントリの`drcs`→`alternative`マッピング、約1.6MB）
+- `control.json`: アプリは`videoinfo.json`の兄弟URLとして取得する（`ExoPlayerSurface.metadataUrlsFrom`が`cenc`/`cbcs`/`clear`セグメントまで遡って構築）。認証なしの直接取得は403
+
+## 6.9 need_L1_hd と L3 フォールバック
+
+`videoinfo.json`の`need_L1_hd=true`は、アプリ内で次のように使われる（`VideoInfo.selectL3FallbackUrl`）:
+
+- `needL1HD`が真かつ選択ビットレートが1500超（720p/1080p）の場合、同じdrmType/codec/dynamicRangeで**1500以下（540p以下）の最上位マニフェスト**へフォールバックする
+- つまりL3環境では540p以下、L1環境のみ720p/1080pが選択される
+
+## 6.10 DVR・DASH・VODの状況
+
+- DVR: ライブプレイリストは`?dvr=1`等でも同じローリングプレイリスト（4セグメント）を返す。アプリのDVR再生は`getDvrVideoForPublication`で番組のVOD形式ディスクリプタへ切り替える実装
+- DASH: アプリコードに`.mpd`参照はなく、`.mpd`パスは403。このアプリはHLS専用
+- VOD: `archive2.hsk.st.nhk`上のディスクリプタは認証なしでは403。VODのディスクリプタURLはAPI応答の`detailedVideoDescriptor`フィールドで配布され、認証フローが必要
 
 ## 7. DRM・認証フロー
 

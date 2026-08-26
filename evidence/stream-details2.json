@@ -1,0 +1,97 @@
+{
+  "measuredAt": "2026-08-26T11:06:55+09:00",
+  "audio": {
+    "esId": 1,
+    "esFlags": 0,
+    "objectTypeIndication": 64,
+    "streamType": 21,
+    "bufferSize": 0,
+    "maxBitrate": 192000,
+    "avgBitrate": 0,
+    "audioObjectType": 2,
+    "samplingFrequency": 48000,
+    "channelConfiguration": 2
+  },
+  "control": {
+    "url": "https://simul2.hsk.st.nhk/npd4/7fe0-0400/simul/control.json",
+    "error": "HTTP Error 403: Forbidden"
+  },
+  "controlVod": {
+    "url": "https://archive2.hsk.st.nhk/npd4/7fe0-0400/simul/control.json",
+    "error": "HTTP Error 403: Forbidden"
+  },
+  "videoinfo_G1": {
+    "topKeys": [
+      "need_L1_hd",
+      "allow_multispeed",
+      "manifests"
+    ],
+    "nonManifest": {
+      "need_L1_hd": true,
+      "allow_multispeed": false
+    }
+  },
+  "videoinfo_G2": {
+    "topKeys": [
+      "need_L1_hd",
+      "allow_multispeed",
+      "manifests"
+    ],
+    "nonManifest": {
+      "need_L1_hd": true,
+      "allow_multispeed": false
+    }
+  },
+  "videoinfo_E1": {
+    "topKeys": [
+      "need_L1_hd",
+      "allow_multispeed",
+      "manifests"
+    ],
+    "nonManifest": {
+      "need_L1_hd": true,
+      "allow_multispeed": false
+    }
+  },
+  "videoinfo_E3": {
+    "topKeys": [
+      "need_L1_hd",
+      "allow_multispeed",
+      "manifests"
+    ],
+    "nonManifest": {
+      "need_L1_hd": true,
+      "allow_multispeed": false
+    }
+  },
+  "dvrProbes": [
+    {
+      "url": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/v3000/playlist_dvr.m3u8",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    {
+      "url": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/v3000/playlist.m3u8?dvr=1",
+      "status": 200,
+      "bytes": 878,
+      "head": "#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:7\n#EXT-X-MEDIA-SEQUENCE:253544\n#E"
+    },
+    {
+      "url": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/v3000/dvr/playlist.m3u8",
+      "error": "HTTP Error 403: Forbidden"
+    }
+  ],
+  "drcsSamples": [
+    {
+      "drcs": "AADwAAAPAAAAAADwAAAPAAAAAAD///AP//8AAAD///AP//8AAA8A8ADwDwAAAA8A8ADwDwAAAPAA8A8ADwAAAPAA8A8ADwAAAAD///D///AAAAD///D///AAAADwAPDwAPAAAADwAPDwAPAAAAD///D///AAAAD///D///AAAAAAAAAAAAAAAAAAAAAAAAAAAAD///////AAAAD///////AAAADwAA8AAPAAAADwAA8AAPAAAAD///////AAAAD///////AAAADwAA8AAPAAAADwAA8AAPAAAAD///////AAAAD///////AAAAAAAA8AAAAAAAAAAA8AAAAAAP/////////wAP/////////wAAAAAA8AAAAAAAAAAA8AAAAAAAAAAA8AAAAAAAAAAA8AAAAAAAAAAA8AAAAAAAAAAA8AAAAA",
+      "alternative": "簞"
+    },
+    {
+      "drcs": "AD///AP//8A8A8ADwDwAA8A8ADwDwAPAA8A8ADwAPAA8A8ADwAAD///D///AAD///D///AADwAPDwAPAADwAPDwAPAAD///D///AAD///D///AAAAAAAAAAAAAAAAAAAAAAD///////AAD///////AADwAA8AAPAADwAA8AAPAAD///////AAD///////AADwAA8AAPAADwAA8AAPAAD///////AAD///////AAAAAA8AAAAAAAAA8AAAAP/////////P/////////AAAAA8AAAAAAAAA8AAAAAAAAA8AAAA",
+      "alternative": "簞"
+    },
+    {
+      "drcs": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AAAAAAAAAAD/AAAP//AP//8AAAAP//AP//8AAAAAAAAPAPAAAAAAAAAPAPAAAAAAAAAPAPAAAAAAAAAPAPAAAAD///8PAPAAAAD///8PAPAAAAAADwAP////8AAADwAP////8AAPDw8PAPAAAAAPDw8PAPAAAAAPDw8PAA8AAAAPDw8PAA8AAAAPDw8PAA8AAAAPDw8PAA8AAAAPDw8PAA8AAAAPDw8PAA8AAAAPDw8PAA8AAAAPDw8PAA8AAAAPDw8PAADwAAAPDw8PAADwAADwDwAPAADw8ADwDwAPAADw8AAADwAPAADw8AAADwAPAADw8AAADwAPD/AP8AAADwAPD/AP8AAADwD/8AAA8AAADwD/8AAA8AAAAAAAAAAAAAAAAAAAAAAAAA",
+      "alternative": "祇"
+    }
+  ]
+}

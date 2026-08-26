@@ -1,0 +1,45 @@
+{
+  "measuredAt": "2026-08-26T11:08:04+09:00",
+  "probes": {
+    "vodG1": {
+      "url": "https://archive2.hsk.st.nhk/npd4/7fe0-0400/vod/videoinfo.json",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    "vodG1b": {
+      "url": "https://archive2.hsk.st.nhk/npd4/7fe0-0400/videoinfo.json",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    "vodG1c": {
+      "url": "https://archive2.hsk.st.nhk/npd4/7fe0-0400/simul/videoinfo.json",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    "controlQuery": {
+      "url": "https://simul2.hsk.st.nhk/npd4/7fe0-0400/simul/control.json?dummy=1",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    "controlCenc": {
+      "url": "https://simul2.hsk.st.nhk/npd4/7fe0-0400/simul/cenc/control.json",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    "am064": {
+      "url": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/am064/init_1003.mp4",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    "am192vs2a": {
+      "url": "https://simul2.hsk.st.nhk/npd4/vs2a/7fe0-0400/simul/cenc/am192/init_1003.mp4",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    "dvr2": {
+      "url": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/v3000/playlist.m3u8?dvr=2",
+      "status": 200,
+      "bytes": 878,
+      "head": "#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:7\n#EXT-X-MEDIA-SEQUENCE:253555\n#EXT-X-MAP:URI=\"/npd4/vs1a/7fe0-0400/cenc/"
+    },
+    "start": {
+      "url": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/v3000/playlist.m3u8?start=20260826T110000",
+      "status": 200,
+      "bytes": 878,
+      "head": "#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:7\n#EXT-X-MEDIA-SEQUENCE:253556\n#EXT-X-MAP:URI=\"/npd4/vs1a/7fe0-0400/cenc/"
+    }
+  }
+}

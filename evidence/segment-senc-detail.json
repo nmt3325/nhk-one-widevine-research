@@ -1,0 +1,81 @@
+{
+  "measuredAt": "2026-08-26T11:06:00+09:00",
+  "senc": {
+    "cenc": {
+      "segmentUrl": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/cenc/v3000/mediaseg20260826110506320.m4s",
+      "analysis": {
+        "httpStatus": 206,
+        "boxSize": 40,
+        "payloadHex": "0000000200000001fedf6aaaf4fb47f5bb7f5c3f46fd5dec0001008900015da0",
+        "version": 0,
+        "flags": 2,
+        "sampleCount": 1,
+        "restLen": 24,
+        "perSample": [
+          {
+            "ivHex": "fedf6aaaf4fb47f5bb7f5c3f46fd5dec",
+            "subsampleCount": 1,
+            "subsamples": [
+              {
+                "clearBytes": 137,
+                "protectedBytes": 89504
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "cbcs": {
+      "segmentUrl": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/cbcs/v3000/mediaseg20260826110506320.m4s",
+      "analysis": {
+        "httpStatus": 206,
+        "boxSize": 24,
+        "payloadHex": "00000002000000010001002300015e06",
+        "version": 0,
+        "flags": 2,
+        "sampleCount": 1,
+        "restLen": 8,
+        "perSample": [
+          {
+            "ivHex": null,
+            "subsampleCount": 1,
+            "subsamples": [
+              {
+                "clearBytes": 35,
+                "protectedBytes": 89606
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "video": {
+    "configurationVersion": 1,
+    "avcProfileIndication": 77,
+    "profileCompatibility": 64,
+    "avcLevelIndication": 31,
+    "nalLengthSize": 4,
+    "spsCount": 1,
+    "sps": [
+      {
+        "profileIdc": 77,
+        "levelIdc": 31,
+        "chromaFormatIdc": 1,
+        "width": 1280,
+        "height": 720
+      }
+    ]
+  },
+  "audio": {
+    "esId": 0,
+    "esFlags": 0
+  },
+  "subtitleSegment": {
+    "url": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/subtl/20260826110426718.vtt",
+    "httpStatus": 206,
+    "bytes": 172,
+    "markers": [],
+    "headHex": "5745425654540a582d54494d455354414d502d4d41503d4d50454754533a313931333133393230392c4c4f43414c3a30303a30303a30302e3030300a0a343231"
+  }
+}

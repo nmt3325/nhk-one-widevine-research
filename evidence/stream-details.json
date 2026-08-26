@@ -1,0 +1,73 @@
+{
+  "measuredAt": "2026-08-26T11:04:32+09:00",
+  "video": {
+    "configurationVersion": 255,
+    "avcProfileIndication": 225,
+    "profileCompatibility": 0,
+    "avcLevelIndication": 34,
+    "nalLengthSize": 4,
+    "spsCount": 13,
+    "sps": []
+  },
+  "audio": {},
+  "subtitles": {
+    "url": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/subtl/playlist.m3u8",
+    "httpStatus": 200,
+    "bytes": 2439,
+    "isWebVTT": false,
+    "hasExtXMap": false,
+    "head": "#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:7\n#EXT-X-MEDIA-SEQUENCE:599795\n#EXTINF:1.0,\n#EXT-X-PROGRAM-DATE-TIME:2026-08-26T11:03:18.014+0900\n/npd4/vs1a/7fe0"
+  },
+  "dashProbes": [
+    {
+      "url": "https://simul2.hsk.st.nhk/npd4/7fe0-0400/simul/cenc/manifest_m3000.mpd",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    {
+      "url": "https://simul2.hsk.st.nhk/npd4/7fe0-0400/simul/manifest.mpd",
+      "error": "HTTP Error 403: Forbidden"
+    }
+  ],
+  "drcs": {
+    "httpStatus": 200,
+    "bytes": 1636889,
+    "shape": {
+      "map": "list[3752] first={'drcs': 'str', 'alternative': 'str'}"
+    }
+  },
+  "s3000VsM3000": {
+    "s3000HttpStatus": 200,
+    "m3000OnlyTags": [
+      "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"l2\",LANGUAGE=\"ja\",NAME=\"main\",DEFAULT=YES,AUTOSELECT=YES,URI=\"https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/am064/playlist.m3u8\"",
+      "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"l2\",LANGUAGE=\"ja\",NAME=\"sub\",DEFAULT=NO,AUTOSELECT=NO,URI=\"https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/as064/playlist.m3u8\"",
+      "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"l2-s\",LANGUAGE=\"ja\",NAME=\"main\",DEFAULT=YES,AUTOSELECT=YES,URI=\"https://simul2.hsk.st.nhk/npd4/vs2a/7fe0-0400/simul/cenc/am064/playlist.m3u8\"",
+      "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"l2-s\",LANGUAGE=\"ja\",NAME=\"sub\",DEFAULT=NO,AUTOSELECT=NO,URI=\"https://simul2.hsk.st.nhk/npd4/vs2a/7fe0-0400/simul/cenc/as064/playlist.m3u8\"",
+      "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"l4\",LANGUAGE=\"ja\",NAME=\"main\",DEFAULT=YES,AUTOSELECT=YES,URI=\"https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/am192/playlist.m3u8\"",
+      "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"l4\",LANGUAGE=\"ja\",NAME=\"sub\",DEFAULT=NO,AUTOSELECT=NO,URI=\"https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/as192/playlist.m3u8\"",
+      "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"l4-s\",LANGUAGE=\"ja\",NAME=\"main\",DEFAULT=YES,AUTOSELECT=YES,URI=\"https://simul2.hsk.st.nhk/npd4/vs2a/7fe0-0400/simul/cenc/am192/playlist.m3u8\"",
+      "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"l4-s\",LANGUAGE=\"ja\",NAME=\"sub\",DEFAULT=NO,AUTOSELECT=NO,URI=\"https://simul2.hsk.st.nhk/npd4/vs2a/7fe0-0400/simul/cenc/as192/playlist.m3u8\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1692000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.4d001f\",AUDIO=\"l2\",SUBTITLES=\"subtitle\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1692000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.4d001f\",AUDIO=\"l2-s\",SUBTITLES=\"subtitle-s\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1692000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.4d001f\",AUDIO=\"l4\",SUBTITLES=\"subtitle\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1692000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.4d001f\",AUDIO=\"l4-s\",SUBTITLES=\"subtitle-s\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=256000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.42400d\",AUDIO=\"l2\",SUBTITLES=\"subtitle\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=256000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.42400d\",AUDIO=\"l2-s\",SUBTITLES=\"subtitle-s\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=3192000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.4d001f\",AUDIO=\"l2\",SUBTITLES=\"subtitle\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=3192000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.4d001f\",AUDIO=\"l2-s\",SUBTITLES=\"subtitle-s\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=3192000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.4d001f\",AUDIO=\"l4\",SUBTITLES=\"subtitle\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=3192000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.4d001f\",AUDIO=\"l4-s\",SUBTITLES=\"subtitle-s\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=448000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.4d0015\",AUDIO=\"l2\",SUBTITLES=\"subtitle\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=448000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.4d0015\",AUDIO=\"l2-s\",SUBTITLES=\"subtitle-s\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=832000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.4d001e\",AUDIO=\"l2\",SUBTITLES=\"subtitle\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=832000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.4d001e\",AUDIO=\"l2-s\",SUBTITLES=\"subtitle-s\""
+    ],
+    "s3000OnlyTags": [
+      "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"l0\",LANGUAGE=\"ja\",NAME=\"main\",DEFAULT=YES,AUTOSELECT=YES,URI=\"https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/am192/playlist.m3u8\"",
+      "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"l0\",LANGUAGE=\"ja\",NAME=\"sub\",DEFAULT=NO,AUTOSELECT=NO,URI=\"https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/simul/cenc/as192/playlist.m3u8\"",
+      "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"l0-s\",LANGUAGE=\"ja\",NAME=\"main\",DEFAULT=YES,AUTOSELECT=YES,URI=\"https://simul2.hsk.st.nhk/npd4/vs2a/7fe0-0400/simul/cenc/am192/playlist.m3u8\"",
+      "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"l0-s\",LANGUAGE=\"ja\",NAME=\"sub\",DEFAULT=NO,AUTOSELECT=NO,URI=\"https://simul2.hsk.st.nhk/npd4/vs2a/7fe0-0400/simul/cenc/as192/playlist.m3u8\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=3192000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.4d001f\",AUDIO=\"l0\",SUBTITLES=\"subtitle\"",
+      "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=3192000,FRAME-RATE=29.970,CODECS=\"mp4a.40.2,avc1.4d001f\",AUDIO=\"l0-s\",SUBTITLES=\"subtitle-s\""
+    ]
+  }
+}

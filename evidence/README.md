@@ -6,6 +6,10 @@
 
 `encryption-scheme.json`は、fMP4初期化セグメントのbox構造（`ftyp`/`encv`/`enca`/`frma`/`schm`/`tenc`/`pssh`）とHLS `#EXT-X-KEY`の構造を解析した暗号化シグナリングの記録です。
 
+`segment-senc-detail.json`は、メディアセグメントの`senc`（サンプル毎IV・サブサンプル構成）と、`avcC`/`esds`から復元したコーデック設定、字幕セグメント形式の記録です。
+
+`stream-details.json` / `stream-details2.json` / `stream-details3.json`は、字幕・DASH・DRCS・`control.json`・`need_L1_hd`・DVR・VODパスの追加調査記録です。
+
 含むもの:
 
 - 公開ディスクリプタ／HLS URL
