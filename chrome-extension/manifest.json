@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "NHK ONE Widevine Key Extractor",
+  "version": "1.0.0",
+  "description": "Extract Widevine content keys from NHK ONE using a .wvd device file",
+  "permissions": [
+    "cookies",
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://www.web.nhk/*",
+    "https://api.web.nhk/*",
+    "https://*.hsk.st.nhk/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "NHK ONE Key Extractor"
+  },
+  "icons": {}
+}

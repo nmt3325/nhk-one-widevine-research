@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>NHK ONE Key Extractor</h1>
+    
+    <div class="section">
+      <label class="file-label" for="wvdFile">WVD \u30d5\u30a1\u30a4\u30eb:</label>
+      <input type="file" id="wvdFile" accept=".wvd">
+      <div id="wvdStatus" class="status">\u30d5\u30a1\u30a4\u30eb\u672a\u9078\u629e</div>
+    </div>
+    
+    <div class="section">
+      <div id="pageInfo" class="info">\u30da\u30fc\u30b8\u3092\u78ba\u8a8d\u4e2d...</div>
+    </div>
+    
+    <button id="extractBtn" disabled>\u9375\u3092\u53d6\u5f97</button>
+    
+    <div id="loading" class="loading hidden">\u53d6\u5f97\u4e2d...</div>
+    
+    <div id="error" class="error hidden"></div>
+    
+    <div id="result" class="result hidden">
+      <h2>\u30b3\u30f3\u30c6\u30f3\u30c8\u9375 <span id="keyCount"></span></h2>
+      <div id="keysList"></div>
+      <button id="downloadBtn">\u9375\u3092\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9</button>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
