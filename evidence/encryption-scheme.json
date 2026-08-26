@@ -1,0 +1,123 @@
+{
+  "measuredAt": "2026-08-26T10:51:27+09:00",
+  "scope": "encryption signaling metadata only; no keys, no PSSH payloads, no key IDs published",
+  "initSegments": {
+    "cenc-video": {
+      "bytes": 950,
+      "ftypBrand": "iso5",
+      "ftypMinorVersion": 512,
+      "pssh": [
+        {
+          "version": 0,
+          "flags": 0,
+          "systemId": "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+          "dataSize": 14
+        },
+        {
+          "version": 0,
+          "flags": 0,
+          "systemId": "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+          "dataSize": 14
+        }
+      ],
+      "protectedTracks": [
+        {
+          "entryType": "encv",
+          "originalFormat": "avc1",
+          "scheme": {
+            "schemeType": "cenc",
+            "schemeVersion": 65536
+          },
+          "tenc": {
+            "version": 0,
+            "flags": 0,
+            "field2bytes": "0000",
+            "isProtected": 1,
+            "perSampleIvSize": 16,
+            "defaultKidPresent": true,
+            "defaultKidLength": 16
+          }
+        }
+      ]
+    },
+    "cbcs-video": {
+      "bytes": 875,
+      "ftypBrand": "iso5",
+      "ftypMinorVersion": 512,
+      "pssh": [],
+      "protectedTracks": [
+        {
+          "entryType": "encv",
+          "originalFormat": "avc1",
+          "scheme": {
+            "schemeType": "cbcs",
+            "schemeVersion": 65536
+          },
+          "tenc": {
+            "version": 1,
+            "flags": 0,
+            "field2bytes": "0019",
+            "isProtected": 1,
+            "perSampleIvSize": 0,
+            "defaultKidPresent": true,
+            "defaultKidLength": 16,
+            "constantIvSize": 16,
+            "constantIvPresent": true
+          }
+        }
+      ]
+    },
+    "cenc-audio": {
+      "originalFormat": "mp4a",
+      "scheme": {
+        "schemeType": "cenc",
+        "schemeVersion": 65536
+      },
+      "tenc": {
+        "version": 0,
+        "flags": 0,
+        "patternFieldHex": "0000",
+        "isProtected": 1,
+        "perSampleIvSize": 16,
+        "defaultKidPresent": true,
+        "defaultKidLength": 16
+      },
+      "entryType": "enca"
+    },
+    "cbcs-audio": {
+      "originalFormat": "mp4a",
+      "scheme": {
+        "schemeType": "cbcs",
+        "schemeVersion": 65536
+      },
+      "tenc": {
+        "version": 1,
+        "flags": 0,
+        "patternFieldHex": "0019",
+        "isProtected": 1,
+        "perSampleIvSize": 0,
+        "defaultKidPresent": true,
+        "defaultKidLength": 16,
+        "constantIvSize": 16,
+        "constantIvPresent": true
+      },
+      "entryType": "enca"
+    }
+  },
+  "cencHlsKeyUri": {
+    "scheme": "data",
+    "mediaType": "text/plain",
+    "encoding": "base64",
+    "decodedSize": 46,
+    "decodedBoxType": "pssh",
+    "psshSystemId": "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+    "psshDataSize": 14,
+    "payloadPublished": false,
+    "hasIvAttribute": false
+  },
+  "cbcsHlsKeyUri": {
+    "scheme": "skd",
+    "hasIvAttribute": false,
+    "payloadPublished": false
+  }
+}

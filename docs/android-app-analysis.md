@@ -133,6 +133,47 @@ G1・G2・E1・E3について、ディスクリプタ、`m3000`マスター、�
 - `schm`のscheme typeは`cbcs`
 - Widevine PSSHは存在しなかった
 
+## 6.5 暗号化方式の詳細（fMP4初期化セグメント解析）
+
+G1の`cenc`/`cbcs`それぞれの映像・音声初期化セグメント（`init_1003.mp4`）をbox単位で解析した。
+
+### 共通構造
+
+- `ftyp`: `iso5`（minor version 512）
+- 映像トラック: `encv`、元フォーマット`avc1`
+- 音声トラック: `enca`、元フォーマット`mp4a`
+- `sinf`内の`schm` scheme versionはいずれも`0x00010000`（1.0）
+
+### cenc（Widevine）
+
+| 項目 | 値 |
+| --- | --- |
+| HLS `METHOD` | `SAMPLE-AES-CTR` |
+| `KEYFORMAT` | `urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed`（Widevine） |
+| KEY URI | `data:` URI（base64）。復号すると46バイトの`pssh` boxで、system IDはWidevine、data部は14バイト |
+| `IV`属性 | なし（サンプル毎IV） |
+| `schm` scheme type | `cenc` |
+| `tenc` | version 0、`isProtected=1`、`perSampleIvSize=16`、16バイトのdefault KIDあり |
+| `pssh` | 初期化セグメント内に2個。いずれもWidevine system ID、data部14バイト |
+
+つまり、映像・音声とも**CENC（AES-CTR、16バイトのサンプル毎IV）+ Widevine**である。
+
+### cbcs（FairPlay）
+
+| 項目 | 値 |
+| --- | --- |
+| HLS `METHOD` | `SAMPLE-AES` |
+| `KEYFORMAT` | `com.apple.streamingkeydelivery` |
+| KEY URI | `skd:` scheme（内容は非公開） |
+| `IV`属性 | なし |
+| `schm` scheme type | `cbcs` |
+| `tenc` | version 1、`isProtected=1`、`perSampleIvSize=0`、16バイトのdefault KID、16バイトのconstant IVあり |
+| `pssh` | なし |
+
+つまり、映像・音声とも**CBCS（AES-CBC、constant IV + サブサンプル暗号化）+ FairPlay SPC**である。
+
+`tenc`内のflags直後には2バイトのフィールドがあり、cencでは`0x0000`、cbcsでは`0x0019`だった。`0x19`はcrypt:skipパターン`1:9`（4bit+4bit）の表現と一致するが、仕様上の位置とは異なるため、ベンダー拡張の可能性を含めて「パターン関連フィールド」として記録する。
+
 ## 7. DRM・認証フロー
 
 静的解析で確認した処理:
