@@ -1,49 +1,49 @@
 #!/usr/bin/env node
 /*
- * 08-web-decrypt-vod.js — NHK ONE Web版 VOD ダウンロード・復号スクリプト
+ * 08-web-decrypt-vod.js — NHK ONE Web版 VOD ダウンロード・復号スクリプト（Playwright不要）
  *
- * 06-decrypt-vod.py の Web版。Frida や Android エミュレーター不要で、
- * Playwright でブラウザを自動操作し、Bearer トークンとストリーム URL を
- * 自動取得してダウンロード＋復号まで行う。
+ * 06-decrypt-vod.py の Web版。ブラウザ自動操作は使わず、
+ * Chrome DevTools (F12) で手動取得した Bearer トークンを使って
+ * ダウンロード＋復号を行う純CLIツール。
  *
  * 必要環境:
- *   npm install playwright
- *   npx playwright install chromium
- *   Google Chrome（Widevine CDM 同梱）
+ *   Node.js (標準ライブラリのみ、npm install 不要)
  *   ffmpeg（PATH に通っていること）
  *   pywidevine（pip install pywidevine）+ .wvd ファイル（復号時）
  *
+ * Bearer トークンの手動取得方法（Chrome）【復号時のみ必要】:
+ *   1. NHK ONE のエピソードページを開き F12 → Network タブ
+ *   2. 再生ボタンを押す
+ *   3. api.web.nhk または archive2.hsk.st.nhk へのリクエストを選ぶ
+ *   4. Request Headers の「Authorization: Bearer eyJ...」をコピー
+ *      （または Application → Cookies → z_at の値でも可）
+ *
  * 使用例:
- *   # ブラウザでページを開いてトークン＋URL を自動取得し、ダウンロード＋復号
+ *   # エピソードURLから自動解決（API・CDNは認証不要）
  *   node 08-web-decrypt-vod.js \
  *     --url 'https://www.web.nhk/tv/pl/series-tep-XXX/ep/YYY' \
- *     --wvd device.wvd --output output.mp4
+ *     --bearer-token 'eyJ...' --wvd device.wvd --output output.mp4
  *
- *   # ブラウザで再生のみ（ダウンロードしない）
- *   node 08-web-decrypt-vod.js --url '...' --playback-only
- *
- *   # トークンとURLだけ取得してJSONに保存（後で --bearer-token などで使う）
- *   node 08-web-decrypt-vod.js --url '...' --capture-only
- *
- *   # 事前に取得したトークンとdescriptor URLを直接指定（ブラウザ不要）
- *   node 08-web-decrypt-vod.js \
- *     --descriptor-url 'https://archive2.hsk.st.nhk/.../videoinfo-XXX.json' \
- *     --bearer-token 'Bearer eyJ...' \
- *     --wvd device.wvd --output output.mp4
- *
- *   # マスタープレイリストを直接指定
+ *   # マスタープレイリストを直接指定（F12で manifest_m*.m3u8 のURLをコピー）
  *   node 08-web-decrypt-vod.js \
  *     --master 'https://archive2.hsk.st.nhk/.../cenc/manifest_m6000.m3u8' \
- *     --bearer-token 'Bearer eyJ...' \
- *     --wvd device.wvd --output output.mp4
+ *     --bearer-token 'eyJ...' --wvd device.wvd --output output.mp4
+ *
+ *   # descriptor URLを直接指定（F12で videoinfo-*.json のURLをコピー）
+ *   node 08-web-decrypt-vod.js \
+ *     --descriptor-url 'https://archive2.hsk.st.nhk/.../videoinfo-XXX.json' \
+ *     --bearer-token 'eyJ...' --wvd device.wvd --output output.mp4
  *
  *   # テスト用に先頭3セグメントのみ
- *   node 08-web-decrypt-vod.js --url '...' --wvd device.wvd --output test.mp4 --max-segments 3
+ *   node 08-web-decrypt-vod.js --url '...' --bearer-token 'eyJ...' \
+ *     --wvd device.wvd --output test.mp4 --max-segments 3
+ *
+ *   # 復号せず暗号化セグメントのダウンロードのみ（--wvd 省略）
+ *   node 08-web-decrypt-vod.js --master '...' --bearer-token 'eyJ...'
  */
 
 'use strict';
 
-const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -59,15 +59,8 @@ const http = require('http');
 const WIDEVINE_SID_HEX = 'edef8ba979d64acea3c827dcd51d21ed';
 const LICENSE_URL = 'https://licence.hsk.st.nhk/widevine/license';
 const API_BASE = 'https://api.web.nhk/r8';
-
-// 同意フローのセレクタ
-const SEL = {
-  consentModal: '#erpc-half-modal',
-  consentCheckbox: 'label:has-text("内容について確認しました")',
-  consentNextBtn: 'button:has-text("次へ")',
-  consentStartBtn: 'button:has-text("サービスの利用を開始する")',
-  playButton: '[aria-label*="再生する"]',
-};
+const UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36';
+const REFERER = 'https://www.web.nhk/';
 
 // ============================================================
 // ユーティリティ
@@ -99,8 +92,14 @@ function fetchUrl(url, options) {
   return new Promise(function (resolve, reject) {
     var parsed = new URLP(url);
     var lib = parsed.protocol === 'https:' ? https : http;
-    var headers = { 'Referer': 'https://www.web.nhk/', 'User-Agent': options.userAgent || 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36' };
-    if (options.bearerToken) {
+    var headers = {
+      'User-Agent': options.userAgent || UA,
+      'Referer': REFERER,
+      'Origin': 'https://www.web.nhk',
+    };
+    // Authorization は api.web.nhk / licence.hsk.st.nhk にのみ付ける。
+    // CDN (archive2.hsk.st.nhk) は認証なしで配信され、無効なトークンを送ると 400 になる。
+    if (options.bearerToken && (parsed.hostname === 'api.web.nhk' || parsed.hostname === 'licence.hsk.st.nhk')) {
       headers['Authorization'] = options.bearerToken.startsWith('Bearer ') ? options.bearerToken : 'Bearer ' + options.bearerToken;
     }
     var req = lib.get(url, { headers: headers, timeout: 60000 }, function (res) {
@@ -200,6 +199,42 @@ function segName(url) {
   return p.split('/').pop() || 'segment';
 }
 
+// JSON を再帰的に探索して videoinfo-*.json のURLを探す
+function findDescriptorUrl(obj) {
+  if (typeof obj === 'string') {
+    if (/videoinfo-[^"'\s]*\.json/.test(obj)) return obj;
+    return null;
+  }
+  if (Array.isArray(obj)) {
+    for (var i = 0; i < obj.length; i++) {
+      var r = findDescriptorUrl(obj[i]);
+      if (r) return r;
+    }
+    return null;
+  }
+  if (obj && typeof obj === 'object') {
+    var keys = Object.keys(obj);
+    for (var k = 0; k < keys.length; k++) {
+      var r2 = findDescriptorUrl(obj[keys[k]]);
+      if (r2) return r2;
+    }
+  }
+  return null;
+}
+
+// エピソードIDから API 経由で descriptor URL を解決
+async function resolveEpisode(episodeId, bearerToken) {
+  var apiUrl = API_BASE + '/t/tvepisode/te/' + episodeId + '.json';
+  log('  API: ' + apiUrl);
+  var resp = await fetchUrl(apiUrl, { bearerToken: bearerToken });
+  if (resp.status !== 200) {
+    log('  API returned status ' + resp.status);
+    return null;
+  }
+  var data = JSON.parse(resp.data.toString('utf-8'));
+  return findDescriptorUrl(data);
+}
+
 // プレイリストのセグメントをダウンロード
 async function downloadPlaylist(playlistUrl, outDir, maxSegments, bearerToken) {
   var resp = await fetchUrl(playlistUrl, { bearerToken: bearerToken });
@@ -278,7 +313,7 @@ function getDecryptionKeys(initPath, wvdPath, licenseUrl, bearerToken) {
     'pssh = PSSH(pssh_b64)',
     'session = cdm.open()',
     'challenge = cdm.get_license_challenge(session, pssh)',
-    'headers = {"Content-Type": "application/octet-stream"}',
+    'headers = {"Content-Type": "application/octet-stream", "Origin": "https://www.web.nhk", "Referer": "https://www.web.nhk/"}',
     'if bearer:',
     '    if not bearer.startswith("Bearer "): bearer = "Bearer " + bearer',
     '    headers["Authorization"] = bearer',
@@ -331,213 +366,47 @@ function decryptAndMerge(videoFiles, audioFiles, keys, outputPath, subtitlePath)
 }
 
 // ============================================================
-// ブラウザ自動操作
-// ============================================================
-
-async function launchBrowser(headless) {
-  var browser = await chromium.launch({
-    channel: 'chrome',
-    headless: headless,
-    args: [
-      '--disable-blink-features=AutomationControlled',
-      '--no-first-run',
-      '--disable-default-apps',
-      '--mute-audio',
-      '--autoplay-policy=no-user-gesture-required',
-    ],
-  });
-  return browser;
-}
-
-// 同意フローを完了
-async function completeConsent(page) {
-  log('Checking for consent modal...');
-  try {
-    await page.waitForSelector(SEL.consentModal, { timeout: 10000 });
-  } catch (e) {
-    log('No consent modal found, continuing...');
-    return;
-  }
-  log('Consent step 1/2...');
-  try {
-    await page.check(SEL.consentCheckbox);
-    await page.waitForTimeout(500);
-    await page.click(SEL.consentNextBtn);
-    await page.waitForTimeout(1000);
-  } catch (e) {
-    log('  Step 1 fallback: ' + e.message);
-    await page.evaluate(function () {
-      var cb = document.querySelector('#erpc-half-modal input[type="checkbox"]');
-      if (cb) cb.click();
-    });
-    await page.waitForTimeout(500);
-    await page.evaluate(function () {
-      var btns = document.querySelectorAll('#erpc-half-modal button');
-      for (var i = 0; i < btns.length; i++) { if (btns[i].textContent.indexOf('次へ') >= 0) btns[i].click(); }
-    });
-    await page.waitForTimeout(1000);
-  }
-  log('Consent step 2/2...');
-  try {
-    await page.click(SEL.consentStartBtn);
-    await page.waitForTimeout(2000);
-  } catch (e) {
-    log('  Step 2 fallback: ' + e.message);
-    await page.evaluate(function () {
-      var btns = document.querySelectorAll('#erpc-half-modal button');
-      for (var i = 0; i < btns.length; i++) { if (btns[i].textContent.indexOf('サービスの利用を開始') >= 0) btns[i].click(); }
-    });
-    await page.waitForTimeout(2000);
-  }
-  log('Consent flow completed.');
-}
-
-// ネットワーク通信を傍受してトークン・URLを取得
-function setupInterception(context) {
-  var captured = {
-    bearerToken: null,
-    descriptorUrl: null,
-    masterUrl: null,
-    licenseRequestUrl: null,
-    licenseResponseSize: null,
-  };
-  context.on('request', function (req) {
-    var url = req.url();
-    var auth = req.headers()['authorization'] || '';
-    if (auth.startsWith('Bearer ') && !captured.bearerToken) {
-      captured.bearerToken = auth;
-      log('  Captured Bearer token: ' + auth.slice(0, 30) + '...');
-    }
-    if (url.indexOf('videoinfo-') >= 0 && url.endsWith('.json') && !captured.descriptorUrl) {
-      captured.descriptorUrl = url;
-      log('  Captured descriptor URL: ' + url.slice(0, 80) + '...');
-    }
-    if (url.indexOf('manifest_m') >= 0 && url.endsWith('.m3u8') && !captured.masterUrl) {
-      captured.masterUrl = url;
-      log('  Captured master playlist: ' + url.slice(0, 80) + '...');
-    }
-    if (url.indexOf('widevine/license') >= 0) {
-      captured.licenseRequestUrl = url;
-      log('  Captured license request to: ' + url);
-    }
-  });
-  context.on('response', async function (res) {
-    if (res.url().indexOf('widevine/license') >= 0) {
-      try {
-        var body = await res.body();
-        captured.licenseResponseSize = body.length;
-        log('  Captured license response: ' + body.length + ' bytes');
-      } catch (e) {}
-    }
-  });
-  return captured;
-}
-
-// 再生をトリガー
-async function triggerPlayback(page) {
-  log('Triggering playback...');
-  await page.waitForTimeout(3000);
-  try {
-    var btn = await page.$(SEL.playButton);
-    if (btn) {
-      await btn.click({ force: true });
-      log('  Clicked play button (force)');
-    } else {
-      await page.evaluate(function () {
-        var b = document.querySelector('[aria-label*="再生する"]');
-        if (b) b.click();
-      });
-      log('  Clicked play button (evaluate)');
-    }
-  } catch (e) {
-    log('  Play button click failed: ' + e.message + ', trying video.play()...');
-    await page.evaluate(function () {
-      var v = document.querySelector('video');
-      if (v) { v.muted = true; v.play(); }
-    });
-  }
-  await page.waitForTimeout(5000);
-}
-
-// CookieからBearerトークンを取得
-async function getBearerFromCookies(context) {
-  var cookies = await context.cookies();
-  for (var i = 0; i < cookies.length; i++) {
-    if (cookies[i].name === 'z_at') {
-      log('  Found z_at cookie: ' + cookies[i].value.slice(0, 30) + '...');
-      return cookies[i].value.startsWith('Bearer ') ? cookies[i].value : 'Bearer ' + cookies[i].value;
-    }
-  }
-  return null;
-}
-
-// ============================================================
 // メイン処理
 // ============================================================
 
 async function main() {
   var opts = parseArgs();
 
-  if (!opts.url && !opts.descriptorUrl && !opts.master) {
-    console.error('Error: --url, --descriptor-url, or --master is required');
+  if (!opts.url && !opts.episodeId && !opts.descriptorUrl && !opts.master && !opts.videoPlaylist) {
+    console.error('Error: --url, --episode-id, --descriptor-url, --master, or --video-playlist is required');
+    process.exit(1);
+  }
+  var needsToken = !!(opts.wvd || opts.url || opts.episodeId);
+  if (needsToken && !opts.bearerToken) {
+    console.error('Error: --bearer-token is required (F12 → Network → Authorization ヘッダーから取得)');
+    console.error('Note: --master / --descriptor-url 直接指定かつ復号なし（--wvd 省略）ならトークン不要です');
     process.exit(1);
   }
 
+  var bearerToken = opts.bearerToken;
   var workDir = opts.workDir || './dl-work';
   fs.mkdirSync(workDir, { recursive: true });
 
-  // --- 再生のみモード ---
-  if (opts.playbackOnly) {
-    log('Mode: Playback only');
-    var browser = await launchBrowser(false);
-    var context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
-    var page = await context.newPage();
-    setupInterception(context);
-    await page.goto(opts.url);
-    await completeConsent(page);
-    await triggerPlayback(page);
-    log('Playback started. Press Ctrl+C to stop.');
-    return;
-  }
-
-  var bearerToken = opts.bearerToken;
   var descriptorUrl = opts.descriptorUrl;
   var masterUrl = opts.master;
 
-  // --- ブラウザでトークン＋URLを自動取得 ---
-  if (opts.url && !descriptorUrl && !masterUrl) {
-    log('Launching browser to capture stream data...');
-    var br = await launchBrowser(false);
-    var ctx = await br.newContext({ viewport: { width: 1280, height: 720 } });
-    var pg = await ctx.newPage();
-    var captured = setupInterception(ctx);
-
-    await pg.goto(opts.url);
-    await completeConsent(pg);
-    await pg.waitForTimeout(5000);
-
-    if (!captured.bearerToken) captured.bearerToken = await getBearerFromCookies(ctx);
-    if (!captured.descriptorUrl) {
-      log('  Waiting for descriptor URL...');
-      await pg.waitForTimeout(5000);
+  // --- エピソードURL / ID から descriptor URL を解決 ---
+  if (!masterUrl && !descriptorUrl) {
+    var episodeId = opts.episodeId;
+    if (!episodeId && opts.url) {
+      var m = opts.url.match(/\/ep\/([A-Za-z0-9]+)/);
+      if (m) episodeId = m[1];
     }
-    if (opts.wvd) {
-      await triggerPlayback(pg);
-      await pg.waitForTimeout(5000);
+    if (!episodeId) { log('Error: Could not extract episode ID from URL'); process.exit(1); }
+    log('Resolving episode: ' + episodeId);
+    descriptorUrl = await resolveEpisode(episodeId, bearerToken);
+    if (!descriptorUrl) {
+      log('Error: Could not resolve descriptor URL from API');
+      log('Hint: F12で videoinfo-*.json のURLを確認して --descriptor-url で直接指定してください');
+      process.exit(1);
     }
-    await br.close();
-
-    bearerToken = bearerToken || captured.bearerToken;
-    descriptorUrl = descriptorUrl || captured.descriptorUrl;
-    masterUrl = masterUrl || captured.masterUrl;
-
-    log('\nCaptured data:');
-    log('  Bearer token: ' + (bearerToken ? bearerToken.slice(0, 30) + '...' : 'NOT FOUND'));
-    log('  Descriptor URL: ' + (descriptorUrl || 'NOT FOUND'));
-    log('  Master playlist: ' + (masterUrl || 'NOT FOUND'));
+    log('  Descriptor URL: ' + descriptorUrl);
   }
-
-  if (!bearerToken && opts.wvd) log('Warning: No Bearer token. License request may fail.');
 
   // --- descriptor URLからマスタープレイリストを解決 ---
   if (!masterUrl && descriptorUrl) {
@@ -548,15 +417,15 @@ async function main() {
     log('  Manifests: ' + manifests.length);
     var best = null, bestBw = 0;
     for (var mi = 0; mi < manifests.length; mi++) {
-      var m = manifests[mi];
-      var drm = m.drm_type || m.drmType || '';
-      var blt = m.bitrate_limit_type || m.bitrateLimitType || '';
-      var mUrl = m.url || '';
+      var mf = manifests[mi];
+      var drm = mf.drm_type || mf.drmType || '';
+      var blt = mf.bitrate_limit_type || mf.bitrateLimitType || '';
+      var mUrl = mf.url || '';
       if (drm === 'cenc' && mUrl) {
         var bwM = blt.match(/(\d+)/);
         var bw = bwM ? parseInt(bwM[1]) : 0;
         if (blt.startsWith('m')) bw += 10000;
-        if (bw > bestBw) { bestBw = bw; best = m; }
+        if (bw > bestBw) { bestBw = bw; best = mf; }
       }
     }
     if (!best) {
@@ -567,37 +436,34 @@ async function main() {
     if (best) {
       masterUrl = best.url;
       log('  Selected: ' + (best.drm_type || best.drmType) + ' ' + (best.bitrate_limit_type || best.bitrateLimitType));
+      log('  Master: ' + masterUrl);
     }
   }
 
-  if (!masterUrl) { log('Error: Could not resolve master playlist URL'); process.exit(1); }
-
   // --- マスタープレイリストを解析 ---
-  log('Parsing master playlist...');
-  var mResp = await fetchUrl(masterUrl, { bearerToken: bearerToken });
-  var mText = mResp.data.toString("utf-8");
-  var mpl = parseMasterPlaylist(mText, masterUrl);
-  log('  Variants: ' + mpl.variants.length + ', Audio: ' + mpl.audios.length + ', Subtitles: ' + mpl.subtitles.length);
-  mpl.variants.sort(function (a, b) { return b.bandwidth - a.bandwidth; });
-  var videoUrl = mpl.variants[0] ? mpl.variants[0].uri : null;
-  var audioUrl = mpl.audios[0] ? mpl.audios[0].uri : null;
-  var subtitleUrl = mpl.subtitles[0] ? mpl.subtitles[0].uri : null;
-  if (mpl.variants[0]) log('  Selected video: ' + (mpl.variants[0].resolution || '?') + ' (' + mpl.variants[0].bandwidth + ' bps)');
-  if (mpl.audios[0]) log('  Selected audio: ' + mpl.audios[0].name);
-  if (mpl.subtitles[0]) log('  Detected subtitles: ' + mpl.subtitles[0].name);
+  var videoUrl = opts.videoPlaylist || null;
+  var audioUrl = opts.audioPlaylist || null;
+  var subtitleUrl = opts.subtitlePlaylist || null;
+
+  if (!videoUrl) {
+    if (!masterUrl) { log('Error: Could not resolve master playlist URL'); process.exit(1); }
+    log('Parsing master playlist...');
+    var mResp = await fetchUrl(masterUrl, { bearerToken: bearerToken });
+    if (mResp.status !== 200) { log('Error: master playlist returned status ' + mResp.status); process.exit(1); }
+    var mText = mResp.data.toString('utf-8');
+    var mpl = parseMasterPlaylist(mText, masterUrl);
+    log('  Variants: ' + mpl.variants.length + ', Audio: ' + mpl.audios.length + ', Subtitles: ' + mpl.subtitles.length);
+    mpl.variants.sort(function (a, b) { return b.bandwidth - a.bandwidth; });
+    videoUrl = mpl.variants[0] ? mpl.variants[0].uri : null;
+    if (!audioUrl) audioUrl = mpl.audios[0] ? mpl.audios[0].uri : null;
+    if (!subtitleUrl) subtitleUrl = mpl.subtitles[0] ? mpl.subtitles[0].uri : null;
+    if (mpl.variants[0]) log('  Selected video: ' + (mpl.variants[0].resolution || '?') + ' (' + mpl.variants[0].bandwidth + ' bps)');
+    if (mpl.audios[0]) log('  Selected audio: ' + mpl.audios[0].name);
+    if (mpl.subtitles[0]) log('  Detected subtitles: ' + mpl.subtitles[0].name);
+  }
   if (!videoUrl) { log('Error: No video playlist URL'); process.exit(1); }
 
   var maxSegments = opts.maxSegments ? parseInt(opts.maxSegments) : null;
-
-  // --- キャプチャのみモード ---
-  if (opts.captureOnly) {
-    log('\nCapture mode: Saving captured data...');
-    var cap = { bearerToken: bearerToken, descriptorUrl: descriptorUrl, masterUrl: masterUrl, videoUrl: videoUrl, audioUrl: audioUrl, subtitleUrl: subtitleUrl, timestamp: new Date().toISOString() };
-    var capPath = path.join(workDir, 'capture.json');
-    fs.writeFileSync(capPath, JSON.stringify(cap, null, 2));
-    log('  Saved to: ' + capPath);
-    return;
-  }
 
   // --- 動画セグメントをダウンロード ---
   log('[1/4] Downloading video...');
@@ -620,27 +486,17 @@ async function main() {
     await downloadSubtitles(subtitleUrl, path.join(workDir, 'subtitles'), maxSegments, subtitlePath, bearerToken);
   }
 
-  // --- キャプチャのみモード ---
-  if (opts.captureOnly) {
-    log('\nCapture mode: Saving captured data...');
-    var cap = { bearerToken: bearerToken, descriptorUrl: descriptorUrl, masterUrl: masterUrl, videoUrl: videoUrl, audioUrl: audioUrl, subtitleUrl: subtitleUrl, timestamp: new Date().toISOString() };
-    var capPath = path.join(workDir, 'capture.json');
-    fs.writeFileSync(capPath, JSON.stringify(cap, null, 2));
-    log('  Saved to: ' + capPath);
-    return;
-  }
-
   // --- 復号＋マージ ---
   if (!opts.wvd) {
     log('\nNo .wvd file provided. Encrypted segments saved in: ' + workDir);
-    log('To decrypt, provide --wvd device.wvd');
+    log('To decrypt, re-run with --wvd device.wvd');
     return;
   }
   if (!audioFiles.length) { log('Error: Audio is required for a complete MP4'); process.exit(1); }
 
   log('[3/4] Getting decryption keys...');
   if (!videoInit) { log('Error: No init segment in video playlist'); process.exit(1); }
-  var keys = getDecryptionKeys(videoInit, opts.wvd, LICENSE_URL, bearerToken);
+  var keys = getDecryptionKeys(videoInit, opts.wvd, opts.licenseUrl || LICENSE_URL, bearerToken);
   if (!keys) { log('Error: Could not get decryption keys'); process.exit(1); }
 
   log('[4/4] Decrypting and merging...');
