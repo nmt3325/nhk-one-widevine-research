@@ -45,7 +45,12 @@
 - `cbcs`: 12件
 - `bitrate_limit_type`: `m6000`, `m3000`, `m1500`, `m0768`, `m0384`, `m0192`, `s6000`, `s3000`, `s1500`, `s0768`, `s0384`, `s0192`
 
-各ディスクリプタには`manifests`以外に次のフィールドがある。\n\n- `need_L1_hd`: `true`（G1・G2・E1・E3すべて）\n- `allow_multispeed`: `false`\n\n`m`/`s`接頭辞は、アプリ内の`BitrateLimitType.isMulti`（先頭`m`ならmulti）で区別される。実測でも`m3000`は複数音声グループ（`l2`=am064, `l4`=am192）を持ち、`s3000`は単一音声グループ（`l0`=am192）のみを持つ。つまり`m`=multi（複数音声）、`s`=single（単一音声）である。
+各ディスクリプタには`manifests`以外に次のフィールドがある。
+
+- `need_L1_hd`: `true`（G1・G2・E1・E3すべて）
+- `allow_multispeed`: `false`
+
+`m`/`s`接頭辞は、アプリ内の`BitrateLimitType.isMulti`（先頭`m`ならmulti）で区別される。実測でも`m3000`は複数音声グループ（`l2`=am064, `l4`=am192）を持ち、`s3000`は単一音声グループ（`l0`=am192）のみを持つ。つまり`m`=multi（複数音声）、`s`=single（単一音声）である。
 
 ## 4. 最終HLS URL
 
