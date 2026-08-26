@@ -302,7 +302,8 @@ VOD init segmentの構造:
 3. `pywidevine`の`Cdm`/`Device`/`PSSH`でライセンスチャレンジを生成
 4. チャレンジを`https://licence.hsk.st.nhk/widevine/license`へ`Authorization: Bearer <token>`付きでPOST
 5. ライセンスレスポンスを`cdm.parse_license()`で解析しCONTENT鍵を取得
-6. FFmpegの`-decryption_key <key>`で連結fMP4を復号し、映像・音声をMP4へマージ
+6. **KIDに一致する鍵を選択して復号**（重要）: ライセンスサーバーは複数のCONTENT鍵を返す。映像・音声の各initセグメントの`tenc`ボックスにある`default_KID`と一致する鍵をトラックごとに選び、FFmpegに入力別の`-decryption_key`として渡す。先頭鍵を全トラックに使うと復号結果が壊れる（今回のテストで実測: 映像KID `ad6864e4...`、音声KID `b2850ac7...`が別鍵を要求）
+7. 映像・音声をMP4へマージ
 
 `--master`指定時は`#EXT-X-STREAM-INF`から最高ビットレートの映像、`#EXT-X-MEDIA:TYPE=AUDIO`から主音声、`TYPE=SUBTITLES`から字幕を自動選択する。字幕は`mov_text`でMP4へmux可能。
 

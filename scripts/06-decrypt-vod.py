@@ -167,6 +167,36 @@ def find_pssh_boxes(data):
     return results
 
 
+def parse_tenc_kid(init_path):
+    """Extract default_KID from the tenc box of an fMP4 init segment.
+
+    Returns the KID as a lowercase hex string (no dashes), or None.
+    """
+    with open(init_path, "rb") as f:
+        data = f.read()
+    idx = data.find(b"tenc")
+    if idx < 4:
+        return None
+    size = struct.unpack(">I", data[idx - 4 : idx])[0]
+    if size < 32 or idx - 4 + size > len(data):
+        return None
+    body = data[idx + 4 : idx - 4 + size]  # skip size+type
+    version = body[0]
+    if version == 0:
+        return body[8:24].hex()
+    return body[10:26].hex()
+
+
+def select_key_for_kid(keys, kid_hex):
+    """Select the content key whose KID matches kid_hex (normalized)."""
+    norm = kid_hex.replace("-", "").lower()
+    for k in keys:
+        k_kid = str(k["kid"]).replace("-", "").lower()
+        if k_kid == norm:
+            return k["key"]
+    return None
+
+
 def extract_episode_id(url):
     """Extract episode ID from an NHK ONE program page URL."""
     m = re.search(r"/ep/([A-Z0-9]+)", url)
@@ -360,9 +390,8 @@ def get_decryption_keys(init_path, wvd_path, license_url, bearer_token):
     return content_keys
 
 
-def decrypt_and_merge(video_files, audio_files, keys, output_path, subtitle_path=None):
+def decrypt_and_merge(video_files, audio_files, video_key, audio_key, output_path, subtitle_path=None):
     """Decrypt encrypted fMP4 and merge to MP4 using FFmpeg."""
-    content_key = keys[0]["key"]
 
     v_dir = os.path.dirname(video_files[0])
     v_concat = os.path.join(v_dir, "concat.mp4")
@@ -380,9 +409,9 @@ def decrypt_and_merge(video_files, audio_files, keys, output_path, subtitle_path
 
     cmd = [
         "ffmpeg", "-y",
-        "-decryption_key", content_key,
+        "-decryption_key", video_key,
         "-i", v_concat,
-        "-decryption_key", content_key,
+        "-decryption_key", audio_key,
         "-i", a_concat,
     ]
     if subtitle_path and os.path.exists(subtitle_path):
@@ -523,9 +552,10 @@ def main():
     video_files, video_init = download_playlist(video_url, os.path.join(args.work_dir, "video"), args.max_segments)
 
     audio_files = []
+    audio_init = None
     if audio_url:
         print("[2/4] Downloading audio...")
-        audio_files, _ = download_playlist(audio_url, os.path.join(args.work_dir, "audio"), args.max_segments)
+        audio_files, audio_init = download_playlist(audio_url, os.path.join(args.work_dir, "audio"), args.max_segments)
     else:
         print("[2/4] No audio playlist, skipping")
 
@@ -537,6 +567,20 @@ def main():
     if not keys:
         sys.exit(1)
 
+    # Match each track's tenc default_KID to the correct content key.
+    video_kid = parse_tenc_kid(video_init)
+    audio_kid = parse_tenc_kid(audio_init) if audio_files else None
+    print(f"  video tenc KID: {video_kid}")
+    if audio_kid:
+        print(f"  audio tenc KID: {audio_kid}")
+    video_key = select_key_for_kid(keys, video_kid) if video_kid else None
+    audio_key = select_key_for_kid(keys, audio_kid) if audio_kid else None
+    if not video_key or (audio_kid and not audio_key):
+        print("  Warning: KID match failed, falling back to first content key")
+        print(f"  available KIDs: {[k['kid'] for k in keys]}")
+        video_key = video_key or keys[0]["key"]
+        audio_key = audio_key or keys[0]["key"]
+
     subtitle_path = None
     if subtitle_url:
         subtitle_path = args.concat_subtitles or os.path.join(args.work_dir, "subtitles.vtt")
@@ -547,7 +591,7 @@ def main():
     if not audio_files:
         print("Error: Audio is required for a complete MP4")
         sys.exit(1)
-    success = decrypt_and_merge(video_files, audio_files, keys, args.output, subtitle_path)
+    success = decrypt_and_merge(video_files, audio_files, video_key, audio_key, args.output, subtitle_path)
     if success:
         print("\nDone!")
     else:
