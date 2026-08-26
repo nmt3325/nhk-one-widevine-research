@@ -67,6 +67,20 @@ Widevine L3 CDMデバイスファイル（`.wvd`）とBearerトークンがあ�
 ```bash
 pip install pywidevine  # 必須
 
+# 番組ページURLから自動解決してダウンロード＋復号
+python3 scripts/06-decrypt-vod.py \
+  --url 'https://www.web.nhk/tv/pl/series-tep-XXXX/ep/YYYY' \
+  --wvd device.wvd \
+  --bearer-token '<token>' \
+  --output output.mp4
+
+# descriptor URLを直接指定
+python3 scripts/06-decrypt-vod.py \
+  --descriptor-url 'https://archive2.hsk.st.nhk/npd4/.../videoinfo-XXX.json' \
+  --wvd device.wvd \
+  --bearer-token '<token>' \
+  --output output.mp4
+
 # マスタープレイリストから自動選択してダウンロード＋復号
 python3 scripts/06-decrypt-vod.py \
   --master '<master-playlist-url>' \
@@ -98,6 +112,13 @@ python3 scripts/06-decrypt-vod.py \
   --output test.mp4 \
   --max-segments 3
 ```
+
+### 入力ソースの解決フロー
+
+1. **`--url`**: 番組ページURLからエピソードIDを抽出し、`api.web.nhk/r8/t/tvepisode/te/{id}.json`でエピソード情報を取得。`video[0].detailedVideoDescriptor`からdescriptor URLを取得する。このフィールドは認証が必要な場合がある
+2. **`--descriptor-url`**: video descriptor JSONを直接指定。`manifests[]`から最適なCENC manifestを自動選択
+3. **`--master`**: HLSマスタープレイリストを直接指定。最高ビットレートの映像・主音声・字幕を自動検出
+4. **`--video-playlist` + `--audio-playlist`**: メディアプレイリストを個別指定
 
 フロー: initセグメントからWidevine PSSHを抽出 → pywidevineでライセンスチャレンジを生成 → NHKのライセンスサーバーへPOST → 鍵を取得 → FFmpegの`-decryption_key`で復号・映像音声をマージ。`--master`指定時は映像・音声・字幕プレイリストを自動検出します。
 

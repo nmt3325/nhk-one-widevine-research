@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Download and decrypt NHK ONE VOD content using a Widevine device (.wvd) file.
+"""Download and decrypt NHK ONE VOD content.
 
+Accepts a program page URL, episode ID, descriptor URL, or direct playlist URLs.
 Downloads encrypted HLS segments, extracts PSSH from the init segment,
-obtains Widevine license keys via pywidevine, and decrypts the content
-using FFmpeg. Subtitles can also be downloaded and merged.
+obtains Widevine license keys via pywidevine, and decrypts using FFmpeg.
 
 Requirements:
     pip install pywidevine
@@ -12,24 +12,38 @@ Requirements:
     A Bearer token for the NHK license server
 
 Usage:
-    # Full download + decrypt via master playlist
+    # From a program page URL (requires --bearer-token for API auth)
     python3 06-decrypt-vod.py \\
-        --master <master-playlist-url> \\
+        --url 'https://www.web.nhk/tv/pl/series-tep-4N9Y61G7M7/ep/MZ2R1M49J4' \\
+        --wvd device.wvd \\
+        --bearer-token <token> \\
+        --output output.mp4
+
+    # From a descriptor URL directly
+    python3 06-decrypt-vod.py \\
+        --descriptor-url 'https://archive2.hsk.st.nhk/npd4/.../videoinfo-XXX.json' \\
+        --wvd device.wvd \\
+        --bearer-token <token> \\
+        --output output.mp4
+
+    # From a master playlist URL directly
+    python3 06-decrypt-vod.py \\
+        --master '<master-playlist-url>' \\
         --wvd device.wvd \\
         --bearer-token <token> \\
         --output output.mp4
 
     # Specify video and audio playlists directly
     python3 06-decrypt-vod.py \\
-        --video-playlist <video-playlist-url> \\
-        --audio-playlist <audio-playlist-url> \\
+        --video-playlist '<video-playlist-url>' \\
+        --audio-playlist '<audio-playlist-url>' \\
         --wvd device.wvd \\
-        --bearer-token <token> \\
+        --bearer-token '<token>' \\
         --output output.mp4
 
     # With subtitles
     python3 06-decrypt-vod.py \\
-        --master <master-playlist-url> \\
+        --master '<master-playlist-url>' \\
         --wvd device.wvd \\
         --bearer-token <token> \\
         --output output.mp4 \\
@@ -37,14 +51,15 @@ Usage:
 
     # Test with limited segments
     python3 06-decrypt-vod.py \\
-        --master <master-playlist-url> \\
+        --master '<master-playlist-url>' \\
         --wvd device.wvd \\
         --bearer-token <token> \\
-        --output output.mp4 \\
+        --output test.mp4 \\
         --max-segments 3
 """
 import argparse
 import base64
+import json
 import os
 import re
 import struct
@@ -55,11 +70,15 @@ import urllib.request
 
 WIDEVINE_SYSTEM_ID = bytes.fromhex("edef8ba979d64acea3c827dcd51d21ed")
 DEFAULT_LICENSE_URL = "https://licence.hsk.st.nhk/widevine/license"
-UA = "nhk-one-research/1.0"
+DEFAULT_API_BASE = "https://api.web.nhk/r8"
+UA = "NHKONE-Android/1.1.9"
 
 
-def fetch(url, dest=None):
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
+def fetch(url, dest=None, bearer_token=None):
+    headers = {"User-Agent": UA}
+    if bearer_token:
+        headers["Authorization"] = f"Bearer {bearer_token}"
+    req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=60) as r:
         data = r.read()
     if dest:
@@ -146,6 +165,126 @@ def find_pssh_boxes(data):
                     results.append(box)
         start = idx + 4
     return results
+
+
+def extract_episode_id(url):
+    """Extract episode ID from an NHK ONE program page URL."""
+    m = re.search(r"/ep/([A-Z0-9]+)", url)
+    return m.group(1) if m else None
+
+
+def resolve_episode(episode_id, bearer_token=None):
+    """Fetch episode info from the NHK API and return (metadata, descriptor_url).
+
+    Returns (episode_title, descriptor_url) or (None, None) on failure.
+    """
+    api_url = f"{DEFAULT_API_BASE}/t/tvepisode/te/{episode_id}.json"
+    print(f"  Episode API: {api_url}")
+    try:
+        data = json.loads(fetch(api_url, bearer_token=bearer_token))
+    except Exception as e:
+        print(f"  Error fetching episode: {e}")
+        return None, None
+
+    title = data.get("name", "")
+    print(f"  Title: {title}")
+
+    videos = data.get("video", [])
+    if not videos:
+        print("  No video entries found in episode data")
+        return title, None
+
+    video = videos[0]
+    ig = video.get("identifierGroup", {})
+    print(f"  Stream type: {ig.get('streamType', '?')}")
+    print(f"  Content status: {video.get('detailedContentStatus', {}).get('contentStatus', '?')}")
+    print(f"  Duration: {video.get('duration', '?')}")
+
+    # Check for detailedVideoDescriptor (camelCase and snake_case)
+    descriptor_url = video.get("detailedVideoDescriptor") or video.get("detailed_video_descriptor")
+    if descriptor_url:
+        print(f"  Descriptor URL: {descriptor_url[:100]}...")
+        return title, descriptor_url
+
+    # Check hasPart for divided content
+    for part in video.get("hasPart", []):
+        if isinstance(part, dict):
+            descriptor_url = part.get("detailedVideoDescriptor") or part.get("detailed_video_descriptor")
+            if descriptor_url:
+                print(f"  Descriptor URL (from part): {descriptor_url[:100]}...")
+                return title, descriptor_url
+
+    # Check detailedContent
+    for item in video.get("detailedContent", []):
+        if isinstance(item, dict):
+            content_url = item.get("contentUrl") or item.get("content_url", "")
+            if "videoinfo" in content_url or "descriptor" in content_url.lower():
+                print(f"  Descriptor URL (from detailedContent): {content_url[:100]}...")
+                return title, content_url
+
+    print("  detailedVideoDescriptor not found in API response")
+    print("  This field may require authentication. Try providing --descriptor-url directly.")
+    return title, None
+
+
+def parse_descriptor(descriptor_url, bearer_token=None):
+    """Fetch a video descriptor JSON and return (master_url, info_dict)."""
+    print(f"  Fetching descriptor...")
+    try:
+        data = json.loads(fetch(descriptor_url, bearer_token=bearer_token))
+    except Exception as e:
+        print(f"  Error fetching descriptor: {e}")
+        return None, None
+
+    manifests = data.get("manifests", [])
+    print(f"  Manifests: {len(manifests)}")
+
+    need_l1 = data.get("need_L1_hd", data.get("need_l1_hd", False))
+    multi = data.get("allow_multispeed", data.get("allowMultispeed", False))
+    print(f"  need_L1_hd: {need_l1}, allow_multispeed: {multi}")
+
+    # Find the best CENC manifest (highest bitrate, 'm' prefix = high quality)
+    best = None
+    best_bw = 0
+    for m in manifests:
+        drm = m.get("drm_type", m.get("drmType", ""))
+        blt = m.get("bitrate_limit_type", m.get("bitrateLimitType", ""))
+        url = m.get("url", "")
+        if drm == "cenc" and url:
+            # Extract bitrate value from type like "m1500" -> 1500
+            bw_m = re.search(r"(\d+)", blt)
+            bw = int(bw_m.group(1)) if bw_m else 0
+            # Prefer 'm' (multi-bitrate) over 's' (single)
+            if blt.startswith("m"):
+                bw += 10000
+            if bw > best_bw:
+                best_bw = bw
+                best = m
+
+    if not best:
+        # Fall back to any manifest with a URL
+        for m in manifests:
+            if m.get("url"):
+                best = m
+                break
+
+    if not best:
+        print("  No usable manifest found in descriptor")
+        return None, None
+
+    master_url = best.get("url", "")
+    drm_type = best.get("drm_type", best.get("drmType", "?"))
+    blt = best.get("bitrate_limit_type", best.get("bitrateLimitType", "?"))
+    print(f"  Selected: {drm_type} {blt} -> {master_url[:100]}...")
+
+    info = {
+        "need_l1_hd": need_l1,
+        "allow_multispeed": multi,
+        "manifest_count": len(manifests),
+        "selected_drm": drm_type,
+        "selected_bitrate_type": blt,
+    }
+    return master_url, info
 
 
 def download_playlist(playlist_url, out_dir, max_segments=None):
@@ -301,12 +440,15 @@ def download_subtitles(playlist_url, out_dir, max_segments=None, concat=None):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     src = ap.add_mutually_exclusive_group(required=True)
+    src.add_argument("--url", help="NHK ONE program page URL (e.g., https://www.web.nhk/tv/pl/series-tep-XXX/ep/YYY)")
+    src.add_argument("--episode-id", help="NHK ONE episode ID (e.g., MZ2R1M49J4)")
+    src.add_argument("--descriptor-url", help="video descriptor JSON URL (e.g., https://archive2.hsk.st.nhk/.../videoinfo-XXX.json)")
     src.add_argument("--master", help="master playlist URL")
     src.add_argument("--video-playlist", help="video media playlist URL")
     ap.add_argument("--audio-playlist", default=None, help="audio media playlist URL")
     ap.add_argument("--wvd", required=True, help="path to Widevine device file (.wvd)")
     ap.add_argument("--license-url", default=DEFAULT_LICENSE_URL, help="Widevine license server URL")
-    ap.add_argument("--bearer-token", default=None, help="Bearer token for license server")
+    ap.add_argument("--bearer-token", default=None, help="Bearer token for API and license server")
     ap.add_argument("--output", required=True, help="output MP4 file path")
     ap.add_argument("--subtitle-playlist", default=None, help="subtitle (WebVTT) playlist URL")
     ap.add_argument("--concat-subtitles", default=None, help="write merged .vtt subtitle file")
@@ -315,14 +457,51 @@ def main():
     args = ap.parse_args()
 
     os.makedirs(args.work_dir, exist_ok=True)
+    master_url = args.master
     video_url = args.video_playlist
     audio_url = args.audio_playlist
     subtitle_url = args.subtitle_playlist
 
-    if args.master:
+    # --- Resolve input to a master playlist URL ---
+    if args.url or args.episode_id:
+        # Step 1: Resolve program URL / episode ID to descriptor URL
+        episode_id = args.episode_id
+        if args.url:
+            episode_id = extract_episode_id(args.url)
+            if not episode_id:
+                print(f"Error: Could not extract episode ID from URL: {args.url}")
+                sys.exit(1)
+        print(f"[0/4] Resolving episode {episode_id}...")
+        title, descriptor_url = resolve_episode(episode_id, bearer_token=args.bearer_token)
+        if not descriptor_url:
+            print("\nError: Could not obtain video descriptor URL from episode data.")
+            print("The detailedVideoDescriptor field was not present in the API response.")
+            print("This may require authentication. You can:")
+            print("  1. Provide --bearer-token with a valid NHK ONE auth token")
+            print("  2. Provide --descriptor-url directly (obtainable via Frida trace)")
+            print("  3. Provide --master with a direct master playlist URL")
+            sys.exit(1)
+
+        # Step 2: Parse descriptor to get master playlist URL
+        print(f"[0.5/4] Parsing video descriptor...")
+        master_url, info = parse_descriptor(descriptor_url, bearer_token=args.bearer_token)
+        if not master_url:
+            print("Error: Could not get master playlist URL from descriptor")
+            sys.exit(1)
+
+    elif args.descriptor_url:
+        # Direct descriptor URL
+        print(f"[0/4] Parsing video descriptor...")
+        master_url, info = parse_descriptor(args.descriptor_url, bearer_token=args.bearer_token)
+        if not master_url:
+            print("Error: Could not get master playlist URL from descriptor")
+            sys.exit(1)
+
+    # --- Parse master playlist to get video/audio/subtitle URLs ---
+    if master_url:
         print("[*] Parsing master playlist...")
-        text = fetch(args.master).decode("utf-8")
-        variants, audios, subtitles = parse_master_playlist(text, args.master)
+        text = fetch(master_url).decode("utf-8")
+        variants, audios, subtitles = parse_master_playlist(text, master_url)
         print(f"  Variants: {len(variants)}, Audio: {len(audios)}, Subtitles: {len(subtitles)}")
         if variants:
             variants.sort(key=lambda v: v["bandwidth"], reverse=True)

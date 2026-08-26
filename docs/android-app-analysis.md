@@ -288,6 +288,13 @@ VOD init segmentの構造:
 
 `scripts/06-decrypt-vod.py`は、`.wvd` Widevine L3デバイスファイルとBearerトークンを用いて暗号化VODをダウンロード・復号し、再生可能なMP4を出力する。danime-downloader（`pywidevine` + FFmpeg `-decryption_key`）の手法をNHK ONEのHLS構造に適用した。
 
+入力ソース:
+
+- **`--url`**: NHK ONE番組ページURL（`https://www.web.nhk/tv/pl/series-tep-XXX/ep/YYY`）。エピソードIDを抽出し、`api.web.nhk/r8/t/tvepisode/te/{id}.json`でエピソード情報を取得。`video[0].detailedVideoDescriptor`からdescriptor URLを取得する
+- **`--descriptor-url`**: video descriptor JSONを直接指定
+- **`--master`**: HLSマスタープレイリストを直接指定
+- **`--video-playlist` + `--audio-playlist`**: メディアプレイリストを個別指定
+
 処理フロー:
 
 1. 映像・音声プレイリストから暗号化セグメントをダウンロード
@@ -299,7 +306,9 @@ VOD init segmentの構造:
 
 `--master`指定時は`#EXT-X-STREAM-INF`から最高ビットレートの映像、`#EXT-X-MEDIA:TYPE=AUDIO`から主音声、`TYPE=SUBTITLES`から字幕を自動選択する。字幕は`mov_text`でMP4へmux可能。
 
-検証: initセグメントからWidevine PSSHボックスを2個抽出できることを確認済み（各65バイト、SystemID一致）。
+検証: initセグメントからWidevine PSSHボックスを2個抽出できることを確認済み（各65バイト、SystemID一致）。descriptor URLから24マニフェスト（CENC 12 / CBCS 12）を検出し、CENC m6000を自動選択できることを確認済み。
+
+注意: 公開（未認証）の`api.web.nhk`レスポンスには`detailedVideoDescriptor`が含まれない場合がある。その場合は`--descriptor-url`で直接指定するか、`--bearer-token`で有効な認証トークンを渡す必要がある。
 
 
 ## 7. DRM・認証フロー
