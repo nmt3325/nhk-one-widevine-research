@@ -193,6 +193,30 @@ function findPsshBoxes(data) {
   return results;
 }
 
+// fMP4 initセグメントの tenc ボックスから default_KID を抽出
+function parseTencKid(initPath) {
+  var data = fs.readFileSync(initPath);
+  var idx = data.indexOf(Buffer.from('tenc'));
+  if (idx < 4) return null;
+  var size = data.readUInt32BE(idx - 4);
+  if (size < 32 || idx - 4 + size > data.length) return null;
+  var body = data.subarray(idx + 4, idx - 4 + size); // skip size+type
+  var version = body[0];
+  var off = version === 0 ? 8 : 10;
+  if (body.length < off + 16) return null;
+  return Buffer.from(body.subarray(off, off + 16)).toString('hex');
+}
+
+// KID に一致するコンテンツ鍵を選択（正規化して比較）
+function selectKeyForKid(keys, kidHex) {
+  var norm = kidHex.replace(/-/g, '').toLowerCase();
+  for (var i = 0; i < keys.length; i++) {
+    var kKid = String(keys[i].kid).replace(/-/g, '').toLowerCase();
+    if (kKid === norm) return keys[i].key;
+  }
+  return null;
+}
+
 // セグメント名を取得
 function segName(url) {
   var p = new URLP(url).pathname;
@@ -263,6 +287,86 @@ async function downloadPlaylist(playlistUrl, outDir, maxSegments, bearerToken) {
   return { files: files, initPath: initPath };
 }
 
+// WebVTT タイムスタンプ解析・フォーマット
+var VTT_TIME_RE = /^(?:(\d+):)?(\d{1,2}):(\d{2})\.(\d{3})/;
+
+function parseVttTime(t) {
+  var m = VTT_TIME_RE.exec(t.trim());
+  if (!m) return null;
+  var hours = parseInt(m[1] || '0');
+  var minutes = parseInt(m[2]);
+  var seconds = parseInt(m[3]);
+  var millis = parseInt(m[4]);
+  return ((hours * 60 + minutes) * 60 + seconds) * 1000 + millis;
+}
+
+function formatVttTime(ms) {
+  if (ms < 0) ms = 0;
+  var hours = Math.floor(ms / 3600000); ms %= 3600000;
+  var minutes = Math.floor(ms / 60000); ms %= 60000;
+  var seconds = Math.floor(ms / 1000);
+  var millis = ms % 1000;
+  function pad(n, w) { return String(n).padStart(w, '0'); }
+  return pad(hours, 2) + ':' + pad(minutes, 2) + ':' + pad(seconds, 2) + '.' + pad(millis, 3);
+}
+
+// VTTセグメントを結合し、最初のキューが 00:00 になるようタイムスタンプをシフト
+// NHK ONEの字幕セグメントは絶対放送時刻（例: 409:32:25.543）と
+// X-TIMESTAMP-MAP を持つため、そのままMP4に入れると字幕が表示されない。
+function mergeVtt(segmentTexts) {
+  var cueBlocks = [];
+  for (var t = 0; t < segmentTexts.length; t++) {
+    var lines = segmentTexts[t].replace(/\r\n/g, '\n').split('\n');
+    var i = 0;
+    if (lines.length && lines[0].startsWith('WEBVTT')) i = 1;
+    var block = [];
+    var seg = lines.slice(i);
+    seg.push('');
+    for (var li = 0; li < seg.length; li++) {
+      var stripped = seg[li].trim();
+      if (stripped === '') {
+        if (block.length) { cueBlocks.push(block); block = []; }
+        continue;
+      }
+      if (/^(X-TIMESTAMP-MAP|NOTE|STYLE|REGION)/.test(stripped)) continue;
+      block.push(seg[li]);
+    }
+    if (block.length) cueBlocks.push(block);
+  }
+  var earliest = null;
+  for (var b = 0; b < cueBlocks.length; b++) {
+    for (var l = 0; l < cueBlocks[b].length; l++) {
+      var line = cueBlocks[b][l];
+      if (line.indexOf('-->') >= 0) {
+        var tt = parseVttTime(line.split('-->')[0]);
+        if (tt !== null && (earliest === null || tt < earliest)) earliest = tt;
+        break;
+      }
+    }
+  }
+  if (earliest === null) earliest = 0;
+  var out = ['WEBVTT', ''];
+  for (var b2 = 0; b2 < cueBlocks.length; b2++) {
+    for (var l2 = 0; l2 < cueBlocks[b2].length; l2++) {
+      var line2 = cueBlocks[b2][l2];
+      var arrowIdx = line2.indexOf('-->');
+      if (arrowIdx >= 0) {
+        var startMs = parseVttTime(line2.slice(0, arrowIdx));
+        var endAndSettings = line2.slice(arrowIdx + 3).trim();
+        var em = VTT_TIME_RE.exec(endAndSettings);
+        if (startMs !== null && em) {
+          var endMs = parseVttTime(endAndSettings);
+          var settings = endAndSettings.slice(em[0].length);
+          line2 = formatVttTime(startMs - earliest) + ' --> ' + formatVttTime(endMs - earliest) + settings;
+        }
+      }
+      out.push(line2);
+    }
+    out.push('');
+  }
+  return out.join('\n').trimEnd() + '\n';
+}
+
 // WebVTT字幕をダウンロード＋結合
 async function downloadSubtitles(playlistUrl, outDir, maxSegments, concatPath, bearerToken) {
   var resp = await fetchUrl(playlistUrl, { bearerToken: bearerToken });
@@ -277,18 +381,9 @@ async function downloadSubtitles(playlistUrl, outDir, maxSegments, concatPath, b
     if ((i + 1) % 50 === 0 || i + 1 === segs.length) log('  subtitle segments: ' + (i + 1) + '/' + segs.length);
   }
   if (concatPath) {
-    var out = ['WEBVTT', ''];
-    for (var t = 0; t < texts.length; t++) {
-      var lines = texts[t].replace(/\r\n/g, '\n').split('\n');
-      var s = 0;
-      if (lines[0] && lines[0].startsWith('WEBVTT')) s = 1;
-      var body = lines.slice(s);
-      while (body.length && body[0] === '') body.shift();
-      out = out.concat(body);
-      if (out[out.length - 1] !== '') out.push('');
-    }
+    var merged = mergeVtt(texts);
     fs.mkdirSync(path.dirname(concatPath) || '.', { recursive: true });
-    fs.writeFileSync(concatPath, out.join('\n').trimEnd() + '\n', 'utf-8');
+    fs.writeFileSync(concatPath, merged, 'utf-8');
     log('  merged subtitles: ' + concatPath + ' (' + fs.statSync(concatPath).size + ' bytes)');
   }
 }
@@ -341,8 +436,7 @@ function getDecryptionKeys(initPath, wvdPath, licenseUrl, bearerToken) {
 }
 
 // FFmpegで復号＋マージ
-function decryptAndMerge(videoFiles, audioFiles, keys, outputPath, subtitlePath) {
-  var contentKey = keys[0].key;
+function decryptAndMerge(videoFiles, audioFiles, videoKey, audioKey, outputPath, subtitlePath) {
   var vDir = path.dirname(videoFiles[0]);
   var vConcat = path.join(vDir, 'concat.mp4');
   var vOut = fs.createWriteStream(vConcat);
@@ -353,7 +447,7 @@ function decryptAndMerge(videoFiles, audioFiles, keys, outputPath, subtitlePath)
   var aOut = fs.createWriteStream(aConcat);
   for (var j = 0; j < audioFiles.length; j++) aOut.write(fs.readFileSync(audioFiles[j]));
   aOut.close();
-  var cmd = ['ffmpeg', '-y', '-decryption_key', contentKey, '-i', vConcat, '-decryption_key', contentKey, '-i', aConcat];
+  var cmd = ['ffmpeg', '-y', '-decryption_key', videoKey, '-i', vConcat, '-decryption_key', audioKey, '-i', aConcat];
   if (subtitlePath && fs.existsSync(subtitlePath)) cmd.push('-i', subtitlePath);
   cmd.push('-map', '0:v:0', '-map', '1:a:0');
   if (subtitlePath && fs.existsSync(subtitlePath)) cmd.push('-map', '2:s:0', '-c:s', 'mov_text');
@@ -473,9 +567,12 @@ async function main() {
 
   // --- 音声セグメントをダウンロード ---
   var audioFiles = [];
+  var audioInit = null;
   if (audioUrl) {
     log('[2/4] Downloading audio...');
-    audioFiles = (await downloadPlaylist(audioUrl, path.join(workDir, 'audio'), maxSegments, bearerToken)).files;
+    var aResult = await downloadPlaylist(audioUrl, path.join(workDir, 'audio'), maxSegments, bearerToken);
+    audioFiles = aResult.files;
+    audioInit = aResult.initPath;
   }
 
   // --- 字幕をダウンロード ---
@@ -499,9 +596,24 @@ async function main() {
   var keys = getDecryptionKeys(videoInit, opts.wvd, opts.licenseUrl || LICENSE_URL, bearerToken);
   if (!keys) { log('Error: Could not get decryption keys'); process.exit(1); }
 
+  // 各トラックの tenc default_KID に一致するコンテンツ鍵を選択
+  var videoKid = parseTencKid(videoInit);
+  var audioKid = audioInit ? parseTencKid(audioInit) : null;
+  log('  video tenc KID: ' + videoKid);
+  if (audioKid) log('  audio tenc KID: ' + audioKid);
+  var videoKey = videoKid ? selectKeyForKid(keys, videoKid) : null;
+  var audioKey = audioKid ? selectKeyForKid(keys, audioKid) : null;
+  if (!videoKey || (audioKid && !audioKey)) {
+    log('  Warning: KID match failed, falling back to first content key');
+    log('  available KIDs: ' + JSON.stringify(keys.map(function (k) { return k.kid; })));
+    videoKey = videoKey || keys[0].key;
+    audioKey = audioKey || keys[0].key;
+  }
+  if (!audioKey) audioKey = videoKey;
+
   log('[4/4] Decrypting and merging...');
   var outputPath = opts.output || 'output.mp4';
-  var success = decryptAndMerge(videoFiles, audioFiles, keys, outputPath, subtitlePath);
+  var success = decryptAndMerge(videoFiles, audioFiles, videoKey, audioKey, outputPath, subtitlePath);
   if (success) log('\nDone!'); else { log('\nFailed!'); process.exit(1); }
 }
 
