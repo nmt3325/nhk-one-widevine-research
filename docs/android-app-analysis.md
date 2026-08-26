@@ -283,6 +283,8 @@ VOD init segmentの構造:
 
 音声（`am192`）やCBCS経路（`cbcs/v1500`など）も同じ手順で取得できる。
 
+字幕も同時に取得できる。`--subtitle-playlist`に字幕プレイリストURLを渡すとWebVTTセグメントを保存し、`--concat-subtitles`で1つの`.vtt`に結合する（先頭の`WEBVTT`ヘッダーは1つに揃え、各セグメントの`X-TIMESTAMP-MAP`を保持）。`--master`指定時はマスターの`#EXT-X-MEDIA:TYPE=SUBTITLES`から字幕プレイリストを自動検出して取得する。字幕セグメントは暗号化されていない。
+
 ## 7. DRM・認証フロー
 
 静的解析で確認した処理:

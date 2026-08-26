@@ -33,7 +33,7 @@ python3 scripts/04-live-manifest-probe.py \
 
 ## 暗号化されたままの動画ダウンロード
 
-VODのメディアプレイリストURLを指定すると、initセグメントと`.m4s`セグメントを復号せずそのまま保存できます。`--concat`で連結した単一fMP4（暗号化されたまま）も出力できます。
+VODのメディアプレイリストURLを指定すると、initセグメントと`.m4s`セグメントを復号せずそのまま保存できます。`--concat`で連結した単一fMP4（暗号化されたまま）も出力できます。字幕プレイリスト（WebVTT）も同時に取得・1ファイルへ結合できます。
 
 ```bash
 # 映像（CENC/v1500）を暗号化されたまま取得し、連結fMP4を出力
@@ -41,14 +41,22 @@ python3 scripts/05-download-encrypted-vod.py \
   --playlist 'https://archive2.hsk.st.nhk/npd4/.../cenc/v1500/playlist.m3u8' \
   --output out/cenc-v1500 --concat out/cenc-v1500.mp4
 
-# 試験用に先頭数セグメントのみ
+# 字幕（WebVTT）も一緒に取得して1ファイルに結合
 python3 scripts/05-download-encrypted-vod.py \
-  --playlist '<media-playlist-url>' --output out/test --max-segments 2
+  --playlist '<media-playlist-url>' --output out/cenc-v1500 --concat out/cenc-v1500.mp4 \
+  --subtitle-playlist '<subtitle-playlist-url>' --concat-subtitles out/subtitles.vtt
 
-# マスタープレイリストから全バリアントを一括取得
+# 試験用に先頭数セグメントのみ（字幕も同じ件数に制限）
+python3 scripts/05-download-encrypted-vod.py \
+  --playlist '<media-playlist-url>' --output out/test --max-segments 2 \
+  --subtitle-playlist '<subtitle-playlist-url>' --concat-subtitles out/test.vtt
+
+# マスタープレイリストから全バリアントを一括取得（字幕は自動検出。--no-subtitlesで無効化）
 python3 scripts/05-download-encrypted-vod.py \
   --master '<master-playlist-url>' --output out/all
 ```
+
+字幕URLはマスタープレイリストの`#EXT-X-MEDIA:TYPE=SUBTITLES`の`URI`です。結合後の`.vtt`は先頭に1つの`WEBVTT`ヘッダーを持ち、各セグメントの`X-TIMESTAMP-MAP`を保持します。
 
 出力は`ftyp`/`encv`/`schm=cenc`/`tenc`/`pssh`を含む暗号化fMP4であり、メディアセグメントは`styp`/`moof`/`senc`構造のままです（復号は行いません）。
 
