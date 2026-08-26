@@ -749,6 +749,7 @@ def main():
     ap.add_argument("--max-segments", type=int, default=None, help="limit segments per playlist")
     ap.add_argument("--skip-segments", type=int, default=0, help="skip first N media segments (init is always fetched)")
     ap.add_argument("--keep-subtitle-tokens", action="store_true", help="keep raw ARIB control tokens in subtitles")
+    ap.add_argument("--ass", action="store_true", help="also write positioned ASS subtitle sidecar (<output>.ass)")
     ap.add_argument("--work-dir", default="./dl-work", help="working directory")
     args = ap.parse_args()
 
@@ -851,7 +852,7 @@ def main():
     if subtitle_url:
         subtitle_path = args.concat_subtitles or os.path.join(args.work_dir, "subtitles.vtt")
         print("  Downloading subtitles...")
-        ass_path = os.path.splitext(args.output)[0] + ".ass"
+        ass_path = os.path.splitext(args.output)[0] + ".ass" if args.ass else None
         download_subtitles(subtitle_url, os.path.join(args.work_dir, "subtitles"), args.max_segments, subtitle_path, args.keep_subtitle_tokens, args.skip_segments, ass_path)
 
     print("[4/4] Decrypting and merging...")
