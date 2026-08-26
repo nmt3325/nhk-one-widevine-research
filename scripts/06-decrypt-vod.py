@@ -317,10 +317,12 @@ def parse_descriptor(descriptor_url, bearer_token=None):
     return master_url, info
 
 
-def download_playlist(playlist_url, out_dir, max_segments=None):
+def download_playlist(playlist_url, out_dir, max_segments=None, skip_segments=0):
     """Download init + media segments. Returns (file_paths, init_path)."""
     text = fetch(playlist_url).decode("utf-8")
     init_url, segments = parse_media_playlist(text, playlist_url)
+    if skip_segments:
+        segments = segments[skip_segments:]
     if max_segments is not None:
         segments = segments[:max_segments]
     written = []
@@ -459,7 +461,27 @@ def format_vtt_time(ms):
     return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{millis:03d}"
 
 
-def merge_vtt(segment_texts):
+ARIB_TOKEN_RE = re.compile(r"\[[^\]\[]*\]")
+
+
+def sanitize_subtitle_text(text, keep_tokens=False):
+    """Convert NHK ONE's ARIB-derived caption markup to plain text.
+
+    VTT cues carry ARIB STD-B24 control sequences as bracketed tokens
+    (e.g. [CS][SWF_7][SDF_840_480][COL_4]). [APS_x_y] marks a new writing
+    position, i.e. a line break. Players such as VLC render these tokens as
+    literal text, so we convert or strip them by default.
+    """
+    if keep_tokens:
+        return text
+    text = re.sub(r"\[APS[^\]]*\]", "\n", text)
+    text = ARIB_TOKEN_RE.sub("", text)
+    text = re.sub(r"[ \t]+\n", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip("\n")
+
+
+def merge_vtt(segment_texts, keep_tokens=False):
     """Merge VTT segments and rebase cue times so the first cue starts at 00:00.
 
     NHK ONE subtitle segments carry absolute broadcast timestamps (e.g.
@@ -517,15 +539,22 @@ def merge_vtt(segment_texts):
                         + format_vtt_time(end_ms - earliest)
                         + settings
                     )
+            else:
+                line = sanitize_subtitle_text(line, keep_tokens=keep_tokens)
             new_block.append(line)
+        # Skip cues that contain no visible text after sanitization.
+        if not any(l.strip() for l in new_block[1:]):
+            continue
         out.extend(new_block)
         out.append("")
     return "\n".join(out).rstrip() + "\n"
 
 
-def download_subtitles(playlist_url, out_dir, max_segments=None, concat=None):
+def download_subtitles(playlist_url, out_dir, max_segments=None, concat=None, keep_tokens=False, skip_segments=0):
     text = fetch(playlist_url).decode("utf-8")
     _, segments = parse_media_playlist(text, playlist_url)
+    if skip_segments:
+        segments = segments[skip_segments:]
     if max_segments is not None:
         segments = segments[:max_segments]
     texts = []
@@ -536,7 +565,7 @@ def download_subtitles(playlist_url, out_dir, max_segments=None, concat=None):
         if (i + 1) % 50 == 0 or i + 1 == len(segments):
             print(f"  subtitle segments: {i + 1}/{len(segments)}")
     if concat:
-        merged = merge_vtt(texts)
+        merged = merge_vtt(texts, keep_tokens=keep_tokens)
         os.makedirs(os.path.dirname(concat) or ".", exist_ok=True)
         with open(concat, "w", encoding="utf-8") as f:
             f.write(merged)
@@ -559,6 +588,8 @@ def main():
     ap.add_argument("--subtitle-playlist", default=None, help="subtitle (WebVTT) playlist URL")
     ap.add_argument("--concat-subtitles", default=None, help="write merged .vtt subtitle file")
     ap.add_argument("--max-segments", type=int, default=None, help="limit segments per playlist")
+    ap.add_argument("--skip-segments", type=int, default=0, help="skip first N media segments (init is always fetched)")
+    ap.add_argument("--keep-subtitle-tokens", action="store_true", help="keep raw ARIB control tokens in subtitles")
     ap.add_argument("--work-dir", default="./dl-work", help="working directory")
     args = ap.parse_args()
 
@@ -625,13 +656,13 @@ def main():
         sys.exit(1)
 
     print("[1/4] Downloading video...")
-    video_files, video_init = download_playlist(video_url, os.path.join(args.work_dir, "video"), args.max_segments)
+    video_files, video_init = download_playlist(video_url, os.path.join(args.work_dir, "video"), args.max_segments, args.skip_segments)
 
     audio_files = []
     audio_init = None
     if audio_url:
         print("[2/4] Downloading audio...")
-        audio_files, audio_init = download_playlist(audio_url, os.path.join(args.work_dir, "audio"), args.max_segments)
+        audio_files, audio_init = download_playlist(audio_url, os.path.join(args.work_dir, "audio"), args.max_segments, args.skip_segments)
     else:
         print("[2/4] No audio playlist, skipping")
 
@@ -661,7 +692,7 @@ def main():
     if subtitle_url:
         subtitle_path = args.concat_subtitles or os.path.join(args.work_dir, "subtitles.vtt")
         print("  Downloading subtitles...")
-        download_subtitles(subtitle_url, os.path.join(args.work_dir, "subtitles"), args.max_segments, subtitle_path)
+        download_subtitles(subtitle_url, os.path.join(args.work_dir, "subtitles"), args.max_segments, subtitle_path, args.keep_subtitle_tokens, args.skip_segments)
 
     print("[4/4] Decrypting and merging...")
     if not audio_files:

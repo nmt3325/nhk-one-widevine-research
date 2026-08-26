@@ -104,6 +104,14 @@ python3 scripts/06-decrypt-vod.py \
   --output output.mp4 \
   --concat-subtitles subtitles.vtt
 
+# 番組中盤のセグメントを取得（先頭200セグメントをスキップ）
+python3 scripts/06-decrypt-vod.py \
+  --master '<master-playlist-url>' \
+  --wvd device.wvd \
+  --bearer-token '<token>' \
+  --output test.mp4 \
+  --skip-segments 200 --max-segments 3
+
 # テスト用に先頭3セグメントのみ
 python3 scripts/06-decrypt-vod.py \
   --master '<master-playlist-url>' \
@@ -144,6 +152,8 @@ frida -U -f nhk.app.tep --runtime=v8 -l scripts/07-extract-token.js
 4. **`--video-playlist` + `--audio-playlist`**: メディアプレイリストを個別指定
 
 フロー: initセグメントからWidevine PSSHを抽出 → pywidevineでライセンスチャレンジを生成 → NHKのライセンスサーバーへPOST → 鍵を取得 → FFmpegの`-decryption_key`で復号・映像音声をマージ。`--master`指定時は映像・音声・字幕プレイリストを自動検出します。
+
+字幕はARIB STD-B24由来の制御トークン（`[CS]`, `[COL_4]`, `[APS_x_y]`等）を自動で除去・改行変換し、0秒起点にリベースしてmuxします（VLC等でそのまま表示可能）。生の制御トークンを保持したい場合は`--keep-subtitle-tokens`を指定してください。
 
 ## Web版スクリプト（Playwright不要の純CLI）
 
