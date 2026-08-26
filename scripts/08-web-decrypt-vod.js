@@ -437,16 +437,23 @@ function getDecryptionKeys(initPath, wvdPath, licenseUrl, bearerToken) {
 
 // FFmpegで復号＋マージ
 function decryptAndMerge(videoFiles, audioFiles, videoKey, audioKey, outputPath, subtitlePath) {
+  // 同期書き込みで結合（ストリームの非同期フラッシュを待たずにFFmpegが走るのを防ぐ）
   var vDir = path.dirname(videoFiles[0]);
   var vConcat = path.join(vDir, 'concat.mp4');
-  var vOut = fs.createWriteStream(vConcat);
-  for (var i = 0; i < videoFiles.length; i++) vOut.write(fs.readFileSync(videoFiles[i]));
-  vOut.close();
+  var vFd = fs.openSync(vConcat, 'w');
+  for (var i = 0; i < videoFiles.length; i++) {
+    var vBuf = fs.readFileSync(videoFiles[i]);
+    fs.writeSync(vFd, vBuf, 0, vBuf.length);
+  }
+  fs.closeSync(vFd);
   var aDir = path.dirname(audioFiles[0]);
   var aConcat = path.join(aDir, 'concat.mp4');
-  var aOut = fs.createWriteStream(aConcat);
-  for (var j = 0; j < audioFiles.length; j++) aOut.write(fs.readFileSync(audioFiles[j]));
-  aOut.close();
+  var aFd = fs.openSync(aConcat, 'w');
+  for (var j = 0; j < audioFiles.length; j++) {
+    var aBuf = fs.readFileSync(audioFiles[j]);
+    fs.writeSync(aFd, aBuf, 0, aBuf.length);
+  }
+  fs.closeSync(aFd);
   var cmd = ['ffmpeg', '-y', '-decryption_key', videoKey, '-i', vConcat, '-decryption_key', audioKey, '-i', aConcat];
   if (subtitlePath && fs.existsSync(subtitlePath)) cmd.push('-i', subtitlePath);
   cmd.push('-map', '0:v:0', '-map', '1:a:0');
