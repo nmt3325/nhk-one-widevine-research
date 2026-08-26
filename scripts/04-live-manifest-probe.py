@@ -2,8 +2,7 @@
 """NHK Android live manifest/DRM signaling metadata probe.
 
 Fetches GeoIP status, videoinfo descriptors, HLS playlists, and small fMP4
-initialization segments. It deliberately does not fetch media segments, key
-URIs, licenses, authentication tokens, or DRM challenges/responses.
+initialization segments.
 """
 import argparse
 import json
@@ -80,7 +79,6 @@ def analyze(timeout: int) -> dict:
     output = {
         "measuredAt": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
         "geo": {"countryCode": geo.get("country_code"), "countryName": geo.get("country_name")},
-        "scope": "metadata only; no media segments, key URIs, licenses, tokens, or content keys fetched",
         "channels": {},
     }
 
@@ -168,14 +166,11 @@ def analyze(timeout: int) -> dict:
                 "frameRate": variant_attributes.get("FRAME-RATE"),
                 "targetDurationSeconds": int(target_duration) if target_duration else None,
                 "mediaResourceCountObserved": len(media_resources),
-                "mediaResourcesFetched": False,
                 "keyMethod": key_attributes.get("METHOD"),
                 "keyFormat": key_attributes.get("KEYFORMAT"),
                 "keyFormatVersion": key_attributes.get("KEYFORMATVERSIONS")
                 or key_attributes.get("KEYFORMATVERSION"),
                 "keyUriScheme": key_uri_scheme,
-                "keyUriPayloadRedacted": True,
-                "keyUriFetched": False,
                 "initPath": urllib.parse.urlsplit(init_url).path,
                 "initHttpStatus": init_status,
                 "initBytes": len(init_bytes),

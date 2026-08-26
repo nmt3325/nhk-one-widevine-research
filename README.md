@@ -2,8 +2,6 @@
 
 NHK ONE（旧 NHKプラス）の配信メタデータ、Androidアプリの通信経路、HLS暗号化シグナリングを検証した記録です。
 
-> このリポジトリは相互運用性・セキュリティ研究のためのメタデータ解析結果のみを扱います。認証トークン、DRMライセンス要求／応答、コンテンツ鍵、映像・音声セグメント、復号済みコンテンツは収録していません。
-
 ## 結論
 
 | 項目 | 確認結果 |
@@ -20,7 +18,7 @@ NHK ONE（旧 NHKプラス）の配信メタデータ、Androidアプリの通�
 
 - [Androidアプリ静的・動的解析（ライブ配信URL／暗号化）](docs/android-app-analysis.md)
 - [Web/VODに関する先行調査](docs/findings.md)
-- [サニタイズ済み計測結果](evidence/android-live-manifest-summary.json)
+- [計測結果](evidence/android-live-manifest-summary.json)
 
 ## 再計測
 
@@ -31,10 +29,8 @@ python3 scripts/04-live-manifest-probe.py \
   --output android-live-manifest-summary.json
 ```
 
-このスクリプトが取得するのは、GeoIP判定、配信ディスクリプタ、HLSマスター／メディアプレイリスト、fMP4初期化セグメントだけです。映像・音声セグメント、鍵URIの内容、DRMライセンス通信は取得しません。
 
 ## 注意
 
 - URLやAPI構造は検証時点（2026-08-26）のものです。
 - 配信の利用はサービスの利用条件、権利、地域制限に従ってください。
-- `hdnts`やBearerトークンなどの認証情報はコミットしないでください。

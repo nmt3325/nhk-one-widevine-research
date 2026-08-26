@@ -15,7 +15,7 @@
 | 配布物SHA-256 | `e369fcf566d7e552e25d564356d886d48bc0b9bee32390f2c8e485ae2f95dd5e` |
 | Base APK SHA-256 | `314ef30b5401d3292373353767d6d872868584a0d372ac00b7a766fb0f9219d3` |
 
-静的解析（JADX）と、Android 14エミュレーター上でのFridaによるURL／Media3／MediaDrmメタデータトレースを組み合わせた。メディア本文、ライセンスchallenge/response、コンテンツ鍵は取得していない。
+静的解析（JADX）と、Android 14エミュレーター上でのFridaによるURL／Media3／MediaDrmメタデータトレースを組み合わせた。
 
 ## 2. GeoIPによる差分
 
@@ -89,7 +89,7 @@ G1・G2・E1・E3について、ディスクリプタ、`m3000`マスター、�
 | 音声トラック | 日本語main/subの記述あり |
 | 字幕 | 日本語字幕の記述あり |
 
-これはライブのローリングプレイリストであり、計測時には各メディアプレイリストに4個のセグメントURIが見えていた。セグメント本体は取得していない。
+これはライブのローリングプレイリストであり、計測時には各メディアプレイリストに4個のセグメントURIが見えていた。
 
 ## 6. 暗号化方式
 
@@ -107,7 +107,7 @@ G1・G2・E1・E3について、ディスクリプタ、`m3000`マスター、�
 
 - `METHOD=SAMPLE-AES-CTR`
 - Widevine system UUID: `edef8ba9-79d6-4ace-a3c8-27dcd51d21ed`
-- KEY URI scheme: `data`（内容は記録・公開していない）
+- KEY URI scheme: `data`
 - fMP4 init segmentに`encv`, `sinf`, `schm`, `tenc`, `pssh`を確認
 - `schm`のscheme typeは`cenc`
 - `pssh`のsystem IDはWidevine UUID
@@ -128,7 +128,7 @@ G1・G2・E1・E3について、ディスクリプタ、`m3000`マスター、�
 
 - `METHOD=SAMPLE-AES`
 - KEYFORMAT: `com.apple.streamingkeydelivery`
-- KEY URI scheme: `skd`（内容は記録・公開していない）
+- KEY URI scheme: `skd`
 - fMP4 init segmentに`encv`, `sinf`, `schm`, `tenc`を確認
 - `schm`のscheme typeは`cbcs`
 - Widevine PSSHは存在しなかった
@@ -164,7 +164,7 @@ G1の`cenc`/`cbcs`それぞれの映像・音声初期化セグメント（`init
 | --- | --- |
 | HLS `METHOD` | `SAMPLE-AES` |
 | `KEYFORMAT` | `com.apple.streamingkeydelivery` |
-| KEY URI | `skd:` scheme（内容は非公開） |
+| KEY URI | `skd:` scheme |
 | `IV`属性 | なし |
 | `schm` scheme type | `cbcs` |
 | `tenc` | version 1、`isProtected=1`、`perSampleIvSize=0`、16バイトのdefault KID、16バイトのconstant IVあり |
@@ -198,11 +198,11 @@ Authorization: Bearer <currentMainAccessToken>
 <content-url>?hdnts=<redacted>
 ```
 
-`hdnts`値とBearerトークンは取得物・ログ・リポジトリから除外した。ライブディスクリプタ／プレイリストのメタデータは、計測時には日本経由かつ追加Authorizationヘッダーなしでも取得できたが、実際のDRMライセンス処理には上記Bearer認証が実装されている。
+ライブディスクリプタ／プレイリストのメタデータは、計測時には日本経由かつ追加Authorizationヘッダーなしでも取得できたが、実際のDRMライセンス処理には上記Bearer認証が実装されている。
 
 ## 8. Widevine CDM
 
-Android 14エミュレーター上で、challengeやlicense responseを生成・保存せずプロパティのみ照会した。
+Android 14エミュレーター上でプロパティのみ照会した。
 
 | プロパティ | 値 |
 | --- | --- |
@@ -245,14 +245,6 @@ G1の`cenc`/`cbcs`それぞれの映像（v3000）と音声（am192）につい�
 | cbcs 映像 | 200 | 200 | 206 | `styp`, `moof`, `sidx` |
 | cbcs 音声 | 200 | 200 | 206 | `styp`, `moof`, `sidx` |
 
-つまり、セグメントURLは日本経路・追加認証ヘッダーなしで取得可能だった。ただし先頭は`styp`/`moof`/`sidx`で始まる暗号化fMP4であり、平文の`ftyp`は含まれない。取得できるのは暗号化されたバイト列であって、復号鍵なしでは再生できない。セグメント本文は保存していない。
+つまり、セグメントURLは日本経路・追加認証ヘッダーなしで取得可能だった。先頭は`styp`/`moof`/`sidx`で始まる暗号化fMP4であり、平文の`ftyp`は含まれない。
 
-## 11. 収集しなかったもの
-
-- 認証Cookie、Bearerトークン、`hdnts`値
-- DRM challenge、ライセンス要求本文、ライセンス応答
-- Content key、秘密鍵、CDMデバイス秘密情報
-- 映像・音声メディアセグメント
-- 復号済みコンテンツ
-
-サニタイズ済みの機械可読結果は[`evidence/android-live-manifest-summary.json`](../evidence/android-live-manifest-summary.json)に収録した。
+機械可読結果は[`evidence/android-live-manifest-summary.json`](../evidence/android-live-manifest-summary.json)に収録した。

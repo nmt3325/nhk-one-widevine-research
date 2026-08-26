@@ -1,6 +1,5 @@
 {
   "measuredAt": "2026-08-26T10:51:27+09:00",
-  "scope": "encryption signaling metadata only; no keys, no PSSH payloads, no key IDs published",
   "initSegments": {
     "cenc-video": {
       "bytes": 950,
@@ -112,12 +111,10 @@
     "decodedBoxType": "pssh",
     "psshSystemId": "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
     "psshDataSize": 14,
-    "payloadPublished": false,
     "hasIvAttribute": false
   },
   "cbcsHlsKeyUri": {
     "scheme": "skd",
-    "hasIvAttribute": false,
-    "payloadPublished": false
+    "hasIvAttribute": false
   }
 }
