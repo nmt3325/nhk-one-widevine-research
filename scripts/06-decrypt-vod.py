@@ -481,13 +481,11 @@ def sanitize_subtitle_text(text, keep_tokens=False):
     return text.strip("\n")
 
 
-def merge_vtt(segment_texts, keep_tokens=False):
-    """Merge VTT segments and rebase cue times so the first cue starts at 00:00.
+def parse_vtt_cues(segment_texts):
+    """Parse VTT segments into cue dicts with rebased (zero-start) timing.
 
-    NHK ONE subtitle segments carry absolute broadcast timestamps (e.g.
-    409:32:25.543) plus X-TIMESTAMP-MAP headers. When muxed into MP4 those
-    absolute times leave subtitles invisible, so we drop the mapping headers
-    and shift every cue by the offset of the earliest cue.
+    Returns a list of {"start": ms, "end": ms, "settings": str,
+    "lines": [raw text lines]} with the earliest cue shifted to 00:00.
     """
     cue_blocks = []
     for text in segment_texts:
@@ -509,48 +507,203 @@ def merge_vtt(segment_texts, keep_tokens=False):
         if block:
             cue_blocks.append(block)
 
-    # Find the earliest cue start across all segments.
+    cues = []
     earliest = None
     for block in cue_blocks:
+        cue = None
         for line in block:
-            if "-->" in line:
-                t = parse_vtt_time(line.split("-->")[0])
-                if t is not None and (earliest is None or t < earliest):
-                    earliest = t
-                break
-    if earliest is None:
-        earliest = 0
-
-    out = ["WEBVTT", ""]
-    for block in cue_blocks:
-        new_block = []
-        for line in block:
-            if "-->" in line:
+            if "-->" in line and cue is None:
                 parts = line.split("-->", 1)
                 start_ms = parse_vtt_time(parts[0])
                 end_and_settings = parts[1].strip()
                 em = VTT_TIME_RE.match(end_and_settings)
                 if start_ms is not None and em:
                     end_ms = parse_vtt_time(end_and_settings)
-                    settings = end_and_settings[em.end():]
-                    line = (
-                        format_vtt_time(start_ms - earliest)
-                        + " --> "
-                        + format_vtt_time(end_ms - earliest)
-                        + settings
-                    )
+                    cue = {
+                        "start": start_ms,
+                        "end": end_ms,
+                        "settings": end_and_settings[em.end():],
+                        "lines": [],
+                    }
+                    if earliest is None or start_ms < earliest:
+                        earliest = start_ms
+            elif cue is not None:
+                cue["lines"].append(line)
             else:
-                line = sanitize_subtitle_text(line, keep_tokens=keep_tokens)
-            new_block.append(line)
-        # Skip cues that contain no visible text after sanitization.
-        if not any(l.strip() for l in new_block[1:]):
+                cue = {"start": None, "end": None, "settings": "", "lines": [line]}
+        if cue is not None:
+            cues.append(cue)
+    if earliest is None:
+        earliest = 0
+    for cue in cues:
+        if cue["start"] is not None:
+            cue["start"] -= earliest
+            cue["end"] -= earliest
+    return cues
+
+
+def merge_vtt(segment_texts, keep_tokens=False):
+    """Merge VTT segments into one plain-text WebVTT document.
+
+    Cue times are rebased to zero and ARIB control tokens are sanitized
+    unless keep_tokens is set.
+    """
+    cues = parse_vtt_cues(segment_texts)
+    out = ["WEBVTT", ""]
+    for cue in cues:
+        if cue["start"] is None:
             continue
-        out.extend(new_block)
+        lines = [sanitize_subtitle_text(l, keep_tokens=keep_tokens) for l in cue["lines"]]
+        if not any(l.strip() for l in lines):
+            continue
+        timing = (
+            format_vtt_time(cue["start"])
+            + " --> "
+            + format_vtt_time(cue["end"])
+            + cue["settings"]
+        )
+        out.append(timing)
+        out.extend(lines)
         out.append("")
     return "\n".join(out).rstrip() + "\n"
 
 
-def download_subtitles(playlist_url, out_dir, max_segments=None, concat=None, keep_tokens=False, skip_segments=0):
+# --- ARIB caption -> ASS conversion (preserves position / color / size) ---
+
+ARIB_FG_COLORS = {
+    "BKF": "&H00000000",
+    "RDF": "&H000000FF",
+    "GRF": "&H0000FF00",
+    "YLF": "&H0000FFFF",
+    "BLF": "&H00FF0000",
+    "MGF": "&H00FF00FF",
+    "CNF": "&H00FFFF00",
+    "WHF": "&H00FFFFFF",
+}
+ARIB_SIZES = {"SSZ": 20, "MSZ": 26, "NSZ": 36}
+DEFAULT_CANVAS = (840, 480)
+DEFAULT_CELL = (36, 36)
+DEFAULT_SPACING = (4, 24)
+
+
+def ass_time(ms):
+    """Format milliseconds as ASS time (H:MM:SS.cc)."""
+    if ms < 0:
+        ms = 0
+    cs = (ms % 1000) // 10
+    total_s = ms // 1000
+    h = total_s // 3600
+    m = (total_s % 3600) // 60
+    sec = total_s % 60
+    return f"{h}:{m:02d}:{sec:02d}.{cs:02d}"
+
+
+def cue_to_ass_events(cue, keep_tokens=False):
+    """Convert one cue to ASS Dialogue lines, one per positioned segment."""
+    canvas = list(DEFAULT_CANVAS)
+    cell = list(DEFAULT_CELL)
+    spacing = list(DEFAULT_SPACING)
+    origin = [0, 0]
+    segs = []
+    cur = {"x": None, "y": None, "color": None, "size": None, "text": ""}
+
+    def flush():
+        if cur["text"].strip():
+            segs.append(dict(cur))
+        cur["text"] = ""
+
+    for line in cue["lines"]:
+        for piece in re.split(r"(\[[^\]\[]*\])", line):
+            if not piece:
+                continue
+            if piece.startswith("[") and not keep_tokens:
+                tok = piece[1:-1]
+                if tok.startswith("APS_"):
+                    parts = tok.split("_")
+                    if len(parts) >= 3:
+                        flush()
+                        pitch_x = cell[0] + spacing[0]
+                        # Rows use half line-pitch units (measured: row ~15 maps
+                        # to the bottom edge of a 480px canvas with SSM 36/SVS 24).
+                        pitch_y = cell[1] + spacing[1]
+                        cur["x"] = origin[0] + int(parts[2]) * pitch_x
+                        cur["y"] = origin[1] + int(parts[1]) * (pitch_y // 2)
+                elif tok.startswith("SDF_"):
+                    parts = tok.split("_")
+                    if len(parts) >= 3:
+                        canvas = [int(parts[1]), int(parts[2])]
+                elif tok.startswith("SDP_"):
+                    parts = tok.split("_")
+                    if len(parts) >= 3:
+                        origin = [int(parts[1]), int(parts[2])]
+                elif tok.startswith("SSM_"):
+                    parts = tok.split("_")
+                    if len(parts) >= 3:
+                        cell = [int(parts[1]), int(parts[2])]
+                elif tok.startswith("SHS_"):
+                    spacing[0] = int(tok.split("_")[1])
+                elif tok.startswith("SVS_"):
+                    spacing[1] = int(tok.split("_")[1])
+                elif tok in ARIB_FG_COLORS:
+                    cur["color"] = ARIB_FG_COLORS[tok]
+                elif tok in ARIB_SIZES:
+                    cur["size"] = ARIB_SIZES[tok]
+                # CS/SWF/COL/ORN/WHF-like setup tokens are ignored.
+            else:
+                cur["text"] += piece
+    flush()
+
+    events = []
+    for seg in segs:
+        overrides = ["\\an7"]
+        if seg["x"] is not None and seg["y"] is not None:
+            overrides.append(f"\\pos({seg['x']},{seg['y']})")
+        if seg["color"]:
+            overrides.append(f"\\c{seg['color']}&")
+        if seg["size"]:
+            overrides.append(f"\\fs{seg['size']}")
+        text = "{" + "".join(overrides) + "}" + seg["text"].strip()
+        events.append(
+            "Dialogue: 0,{},{},Default,,0,0,0,,".format(
+                ass_time(cue["start"]), ass_time(cue["end"])
+            )
+            + text
+        )
+    return events
+
+
+def cues_to_ass(segment_texts, keep_tokens=False):
+    """Render VTT segments as an ASS document preserving position/color/size."""
+    cues = parse_vtt_cues(segment_texts)
+    header = (
+        "[Script Info]\n"
+        "Title: NHK ONE subtitles\n"
+        "ScriptType: v4.00+\n"
+        "PlayResX: 840\n"
+        "PlayResY: 480\n"
+        "ScaledBorderAndShadow: yes\n"
+        "\n"
+        "[V4+ Styles]\n"
+        "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, "
+        "OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, "
+        "ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, "
+        "Alignment, MarginL, MarginR, MarginV, Encoding\n"
+        "Style: Default,Sans-serif,36,&H00FFFFFF,&H000000FF,&H00000000,"
+        "&H96000000,-1,0,0,0,100,100,0,0,3,0,0,7,0,0,0,1\n"
+        "\n"
+        "[Events]\n"
+        "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, "
+        "Effect, Text\n"
+    )
+    body = []
+    for cue in cues:
+        if cue["start"] is None:
+            continue
+        body.extend(cue_to_ass_events(cue, keep_tokens=keep_tokens))
+    return header + "\n".join(body) + "\n"
+
+
+def download_subtitles(playlist_url, out_dir, max_segments=None, concat=None, keep_tokens=False, skip_segments=0, ass_concat=None):
     text = fetch(playlist_url).decode("utf-8")
     _, segments = parse_media_playlist(text, playlist_url)
     if skip_segments:
@@ -570,6 +723,12 @@ def download_subtitles(playlist_url, out_dir, max_segments=None, concat=None, ke
         with open(concat, "w", encoding="utf-8") as f:
             f.write(merged)
         print(f"  merged subtitles: {concat} ({os.path.getsize(concat)} bytes)")
+    if ass_concat:
+        ass_doc = cues_to_ass(texts, keep_tokens=keep_tokens)
+        os.makedirs(os.path.dirname(ass_concat) or ".", exist_ok=True)
+        with open(ass_concat, "w", encoding="utf-8") as f:
+            f.write(ass_doc)
+        print(f"  ASS subtitles (positioned): {ass_concat} ({os.path.getsize(ass_concat)} bytes)")
 
 
 def main():
@@ -692,7 +851,8 @@ def main():
     if subtitle_url:
         subtitle_path = args.concat_subtitles or os.path.join(args.work_dir, "subtitles.vtt")
         print("  Downloading subtitles...")
-        download_subtitles(subtitle_url, os.path.join(args.work_dir, "subtitles"), args.max_segments, subtitle_path, args.keep_subtitle_tokens, args.skip_segments)
+        ass_path = os.path.splitext(args.output)[0] + ".ass"
+        download_subtitles(subtitle_url, os.path.join(args.work_dir, "subtitles"), args.max_segments, subtitle_path, args.keep_subtitle_tokens, args.skip_segments, ass_path)
 
     print("[4/4] Decrypting and merging...")
     if not audio_files:

@@ -157,6 +157,8 @@ frida -U -f nhk.app.tep --runtime=v8 -l scripts/07-extract-token.js
 
 字幕はARIB STD-B24由来の制御トークン（`[CS]`, `[COL_4]`, `[APS_x_y]`等）を自動で除去・改行変換し、0秒起点にリベースしてmuxします（VLC等でそのまま表示可能）。生の制御トークンを保持したい場合は`--keep-subtitle-tokens`を指定してください。
 
+さらに、位置・色・サイズを保持したASS字幕（`<output名>.ass`）もMP4と同名で自動出力します。VLCは同名の`.ass`を自動で読み込むため、MP4を開くだけで放送に近い配置・色付きの字幕が表示されます（実TS抜きツールのCaption2Assやarib-ts2assと同じ手法）。埋め込み字幕（mov_text）は互換性優先のプレーンテキストです。
+
 ## Web版スクリプト（Playwright不要の純CLI）
 
 `scripts/08-web-decrypt-vod.js`は`06-decrypt-vod.py`のWeb版で、AndroidエミュレーターやFridaなしで動作します。Node.jsの標準ライブラリのみ使用（npm install不要）。BearerトークンはブラウザのF12から手動取得します。

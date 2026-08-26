@@ -390,3 +390,25 @@ G1の`cenc`/`cbcs`それぞれの映像（v3000）と音声（am192）につい�
 つまり、セグメントURLは日本経路・追加認証ヘッダーなしで取得可能だった。先頭は`styp`/`moof`/`sidx`で始まる暗号化fMP4であり、平文の`ftyp`は含まれない。
 
 機械可読結果は[`evidence/android-live-manifest-summary.json`](../evidence/android-live-manifest-summary.json)に収録した。
+
+### 字幕の位置・表示の保持（TS抜き手法との比較）
+
+NHK ONEのVTT字幕は、放送のARIB STD-B24 captionを制御コードのテキスト化トークン（`[APS_x_y]`, `[WHF]`, `[MSZ]`等）として保持した形式。実際の放送TS抜きでは以下のツールが同様の問題を解決している:
+
+- **Caption2Ass_PCR**: TS→ASS変換。ARIB表示モデルをエミュレートし位置・色・サイズを再現
+- **arib-ts2ass** (johnoneil/arib): TS→ASS。「位置・色・サイズを意図通りに表示できる」ことをASS採用理由と明記
+- **libaribcaption** (xqq): ARIBデコーダ/レンダラ。DRCS・外字を完全サポート、FFmpeg経由でASS等を出力
+- **FFmpeg+libaribb24/libaribcaption**: TS→WebVTT HLS変換（X-TIMESTAMP-MAPでMPEGTS PTSと対応付け。NHK ONEのVTTも同形式）
+
+本スクリプトはこれらと同じアプローチで、トークンを解析してASSの`\pos`/色/サイズオーバーライドに変換する。変換仕様:
+
+| ARIBトークン | 意味 | ASS変換 |
+|---|---|---|
+| `SDF_W_H` | 表示キャンバス | PlayResX/Y |
+| `SDP_x_y` | 表示領域原点 | posオフセット |
+| `SSM_w_h`+`SHS`/`SVS` | 文字サイズ・間隔 | セルピッチ（縦は半行単位として実測補正） |
+| `APS_row_col` | 描画位置（セル単位） | `\pos(x,y)` |
+| `WHF`/`YLF`/`CNF`等 | 前景色（ARIB標準色） | `\c&HBBGGRR&` |
+| `NSZ`/`MSZ`/`SSZ` | 文字サイズ | `\fs` |
+
+**限界**: DRCS外字はトークン化時点でUnicode置換済みか消失しており復元不可（実TS抜きでは画像化可能）。CLUTパレットの個別色定義も失われるため標準色で近似。
