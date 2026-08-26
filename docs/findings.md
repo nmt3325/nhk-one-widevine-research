@@ -91,7 +91,8 @@ JS から以下のトークン構成が判明:
 
 1. Androidライブのストリーム情報APIと最終HLS URLは特定済み。
 2. CENC/WidevineとCBCS/FairPlayの暗号化シグナリングを確認済み。
-3. Web/VOD固有の認可付きディスクリプタはAndroidライブとは別経路であり、引き続き区別して扱う。
+3. Android VODの`detailedVideoDescriptor`からコンテンツ固有URLを取得し、CENC/Widevine再生、CBCSプレイリスト、映像・音声・字幕セグメントを実測済み。
+4. ライブとVODはdescriptor取得経路と`need_L1_hd` / `allow_multispeed`設定が異なるため、区別して扱う。
 
 ## 7. 使用したツール・リソース
 

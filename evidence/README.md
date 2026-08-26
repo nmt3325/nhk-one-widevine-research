@@ -12,6 +12,8 @@
 
 `dynamic-playback.json`は、日本経由でアプリのライブ再生を実行した際の実測記録（選択プレイリスト、ライセンス要求、L3フォールバック挙動）です。
 
+`vod-dynamic-analysis.json`は、実アプリでVODを再生した際のコンテンツ固有descriptor、選択HLS、プレイリスト長、字幕、セグメント取得可否、CENC/CBCSのinit/senc構造をまとめた記録です。
+
 含むもの:
 
 - 公開ディスクリプタ／HLS URL

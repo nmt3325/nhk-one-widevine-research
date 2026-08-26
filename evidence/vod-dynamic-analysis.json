@@ -1,0 +1,454 @@
+{
+  "measuredAt": "2026-08-26T11:52:11+09:00",
+  "content": {
+    "title": "アイカタ〜大切な人の【イイところ】撮ってきてください〜",
+    "episode": "シーズン2 #6 2人のパパと武尊夫妻に老子もタジタジの組"
+  },
+  "descriptor": {
+    "url": "https://archive2.hsk.st.nhk/npd4/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/videoinfo-73ffe87e7c0ca515aadbd4de22e6c3be.json",
+    "httpStatus": 200,
+    "bytes": 6027,
+    "needL1Hd": false,
+    "allowMultispeed": true,
+    "manifestCount": 24,
+    "drmCounts": {
+      "cenc": 12,
+      "cbcs": 12
+    },
+    "bitrateLimitTypes": [
+      "m0192",
+      "m0384",
+      "m0768",
+      "m1500",
+      "m3000",
+      "m6000",
+      "s0192",
+      "s0384",
+      "s0768",
+      "s1500",
+      "s3000",
+      "s6000"
+    ]
+  },
+  "observedPlayback": {
+    "drm": "cenc",
+    "manifest": "m1500",
+    "videoRendition": "v1500",
+    "audioRendition": "am192",
+    "widevineSecurityLevel": "L3",
+    "licenseEndpoint": "https://licence.hsk.st.nhk/widevine/license",
+    "licenseMethod": "POST",
+    "encryptedVideoAndAudioSegmentsContinued": true
+  },
+  "playlists": {
+    "cencVideo": {
+      "url": "https://archive2.hsk.st.nhk/npd4/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cenc/v1500/playlist.m3u8",
+      "httpStatus": 200,
+      "bytes": 61167,
+      "version": 7,
+      "playlistType": "VOD",
+      "targetDuration": 7,
+      "mediaSequence": 0,
+      "segmentCount": 288,
+      "durationSeconds": 1724.357,
+      "hasEndList": true,
+      "initUrl": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cenc/v1500/init_1003.mp4",
+      "key": {
+        "method": "SAMPLE-AES-CTR",
+        "keyFormat": "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+        "uriScheme": "data",
+        "hasIvAttribute": false
+      },
+      "firstSegmentUrl": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cenc/v1500/mediaseg20260825230000290.m4s",
+      "lastSegmentUrl": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cenc/v1500/mediaseg20260825232844012_1.m4s",
+      "firstProgramDateTime": "2026-08-25T23:00:00.290+0900",
+      "lastProgramDateTime": "2026-08-25T23:28:44.012+0900"
+    },
+    "cencAudio": {
+      "url": "https://archive2.hsk.st.nhk/npd4/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cenc/am192/playlist.m3u8",
+      "httpStatus": 200,
+      "bytes": 61572,
+      "version": 7,
+      "playlistType": "VOD",
+      "targetDuration": 7,
+      "mediaSequence": 0,
+      "segmentCount": 288,
+      "durationSeconds": 1724.356,
+      "hasEndList": true,
+      "initUrl": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cenc/am192/init_1003.mp4",
+      "key": {
+        "method": "SAMPLE-AES-CTR",
+        "keyFormat": "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+        "uriScheme": "data",
+        "hasIvAttribute": false
+      },
+      "firstSegmentUrl": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cenc/am192/mediaseg20260825230000295.m4s",
+      "lastSegmentUrl": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cenc/am192/mediaseg20260825232844007_1.m4s",
+      "firstProgramDateTime": "2026-08-25T23:00:00.295+0900",
+      "lastProgramDateTime": "2026-08-25T23:28:44.007+0900"
+    },
+    "cbcsVideo": {
+      "url": "https://archive2.hsk.st.nhk/npd4/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cbcs/v1500/playlist.m3u8",
+      "httpStatus": 200,
+      "bytes": 61082,
+      "version": 7,
+      "playlistType": "VOD",
+      "targetDuration": 7,
+      "mediaSequence": 0,
+      "segmentCount": 288,
+      "durationSeconds": 1724.357,
+      "hasEndList": true,
+      "initUrl": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cbcs/v1500/init_1003.mp4",
+      "key": {
+        "method": "SAMPLE-AES",
+        "keyFormat": "com.apple.streamingkeydelivery",
+        "uriScheme": "skd",
+        "hasIvAttribute": false
+      },
+      "firstSegmentUrl": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cbcs/v1500/mediaseg20260825230000290.m4s",
+      "lastSegmentUrl": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cbcs/v1500/mediaseg20260825232844012_1.m4s",
+      "firstProgramDateTime": "2026-08-25T23:00:00.290+0900",
+      "lastProgramDateTime": "2026-08-25T23:28:44.012+0900"
+    },
+    "cbcsAudio": {
+      "url": "https://archive2.hsk.st.nhk/npd4/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cbcs/am192/playlist.m3u8",
+      "httpStatus": 200,
+      "bytes": 61487,
+      "version": 7,
+      "playlistType": "VOD",
+      "targetDuration": 7,
+      "mediaSequence": 0,
+      "segmentCount": 288,
+      "durationSeconds": 1724.356,
+      "hasEndList": true,
+      "initUrl": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cbcs/am192/init_1003.mp4",
+      "key": {
+        "method": "SAMPLE-AES",
+        "keyFormat": "com.apple.streamingkeydelivery",
+        "uriScheme": "skd",
+        "hasIvAttribute": false
+      },
+      "firstSegmentUrl": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cbcs/am192/mediaseg20260825230000295.m4s",
+      "lastSegmentUrl": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cbcs/am192/mediaseg20260825232844007_1.m4s",
+      "firstProgramDateTime": "2026-08-25T23:00:00.295+0900",
+      "lastProgramDateTime": "2026-08-25T23:28:44.007+0900"
+    },
+    "subtitle": {
+      "url": "https://archive2.hsk.st.nhk/npd4/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/subtl/playlist.m3u8",
+      "httpStatus": 200,
+      "bytes": 147232,
+      "version": 7,
+      "playlistType": "VOD",
+      "targetDuration": 7,
+      "mediaSequence": 0,
+      "segmentCount": 747,
+      "durationSeconds": 1724.932,
+      "hasEndList": true,
+      "initUrl": null,
+      "key": {},
+      "firstSegmentUrl": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/subtl/20260825225959973.vtt",
+      "lastSegmentUrl": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/subtl/20260825232844718.vtt",
+      "firstProgramDateTime": "2026-08-25T22:59:59.973+0900",
+      "lastProgramDateTime": "2026-08-25T23:28:44.718+0900"
+    }
+  },
+  "availability": {
+    "cencVideoInit": {
+      "url": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cenc/v1500/init_1003.mp4",
+      "headStatus": 200,
+      "rangeStatus": 206,
+      "range": "bytes=0-65535",
+      "rangeBytes": 987,
+      "contentType": "video/mp4",
+      "contentRange": "bytes 0-986/987"
+    },
+    "cencVideoFirstSegment": {
+      "url": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cenc/v1500/mediaseg20260825230000290.m4s",
+      "headStatus": 200,
+      "rangeStatus": 206,
+      "range": "bytes=0-262143",
+      "rangeBytes": 262144,
+      "contentType": "video/mp4",
+      "contentRange": "bytes 0-262143/602657"
+    },
+    "cencAudioInit": {
+      "url": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cenc/am192/init_1003.mp4",
+      "headStatus": 200,
+      "rangeStatus": 206,
+      "range": "bytes=0-65535",
+      "rangeBytes": 912,
+      "contentType": "video/mp4",
+      "contentRange": "bytes 0-911/912"
+    },
+    "cencAudioFirstSegment": {
+      "url": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cenc/am192/mediaseg20260825230000295.m4s",
+      "headStatus": 200,
+      "rangeStatus": 206,
+      "range": "bytes=0-262143",
+      "rangeBytes": 161544,
+      "contentType": "video/mp4",
+      "contentRange": "bytes 0-161543/161544"
+    },
+    "cbcsVideoInit": {
+      "url": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cbcs/v1500/init_1003.mp4",
+      "headStatus": 200,
+      "rangeStatus": 206,
+      "range": "bytes=0-65535",
+      "rangeBytes": 874,
+      "contentType": "video/mp4",
+      "contentRange": "bytes 0-873/874"
+    },
+    "cbcsVideoFirstSegment": {
+      "url": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cbcs/v1500/mediaseg20260825230000290.m4s",
+      "headStatus": 200,
+      "rangeStatus": 206,
+      "range": "bytes=0-262143",
+      "rangeBytes": 262144,
+      "contentType": "video/mp4",
+      "contentRange": "bytes 0-262143/599777"
+    },
+    "cbcsAudioInit": {
+      "url": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cbcs/am192/init_1003.mp4",
+      "headStatus": 200,
+      "rangeStatus": 206,
+      "range": "bytes=0-65535",
+      "rangeBytes": 799,
+      "contentType": "video/mp4",
+      "contentRange": "bytes 0-798/799"
+    },
+    "cbcsAudioFirstSegment": {
+      "url": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/cbcs/am192/mediaseg20260825230000295.m4s",
+      "headStatus": 200,
+      "rangeStatus": 206,
+      "range": "bytes=0-262143",
+      "rangeBytes": 157048,
+      "contentType": "video/mp4",
+      "contentRange": "bytes 0-157047/157048"
+    },
+    "subtitleFirstSegment": {
+      "url": "https://archive2.hsk.st.nhk/npd4/vs1a/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/subtl/20260825225959973.vtt",
+      "headStatus": 200,
+      "rangeStatus": 206,
+      "range": "bytes=0-4095",
+      "rangeBytes": 102,
+      "contentType": "text/vtt",
+      "contentRange": "bytes 0-101/102",
+      "startsWithWebVtt": true
+    }
+  },
+  "initStructure": {
+    "cencVideo": {
+      "bytes": 987,
+      "pssh": [
+        {
+          "version": 0,
+          "systemId": "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+          "dataSize": 33
+        },
+        {
+          "version": 0,
+          "systemId": "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+          "dataSize": 33
+        }
+      ],
+      "protectedTracks": [
+        {
+          "entryType": "encv",
+          "originalFormat": "avc1",
+          "scheme": {
+            "schemeType": "cenc",
+            "schemeVersion": 65536
+          },
+          "tenc": {
+            "version": 0,
+            "flags": 0,
+            "patternFieldHex": "0000",
+            "isProtected": 1,
+            "perSampleIvSize": 16,
+            "defaultKidPresent": true,
+            "defaultKidLength": 16
+          }
+        }
+      ]
+    },
+    "cencAudio": {
+      "bytes": 912,
+      "pssh": [
+        {
+          "version": 0,
+          "systemId": "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+          "dataSize": 33
+        },
+        {
+          "version": 0,
+          "systemId": "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+          "dataSize": 33
+        }
+      ],
+      "protectedTracks": [
+        {
+          "entryType": "enca",
+          "originalFormat": "mp4a",
+          "scheme": {
+            "schemeType": "cenc",
+            "schemeVersion": 65536
+          },
+          "tenc": {
+            "version": 0,
+            "flags": 0,
+            "patternFieldHex": "0000",
+            "isProtected": 1,
+            "perSampleIvSize": 16,
+            "defaultKidPresent": true,
+            "defaultKidLength": 16
+          }
+        }
+      ]
+    },
+    "cbcsVideo": {
+      "bytes": 874,
+      "pssh": [],
+      "protectedTracks": [
+        {
+          "entryType": "encv",
+          "originalFormat": "avc1",
+          "scheme": {
+            "schemeType": "cbcs",
+            "schemeVersion": 65536
+          },
+          "tenc": {
+            "version": 1,
+            "flags": 0,
+            "patternFieldHex": "0019",
+            "isProtected": 1,
+            "perSampleIvSize": 0,
+            "defaultKidPresent": true,
+            "defaultKidLength": 16,
+            "constantIvSize": 16,
+            "constantIvPresent": true
+          }
+        }
+      ]
+    },
+    "cbcsAudio": {
+      "bytes": 799,
+      "pssh": [],
+      "protectedTracks": [
+        {
+          "entryType": "enca",
+          "originalFormat": "mp4a",
+          "scheme": {
+            "schemeType": "cbcs",
+            "schemeVersion": 65536
+          },
+          "tenc": {
+            "version": 1,
+            "flags": 0,
+            "patternFieldHex": "0019",
+            "isProtected": 1,
+            "perSampleIvSize": 0,
+            "defaultKidPresent": true,
+            "defaultKidLength": 16,
+            "constantIvSize": 16,
+            "constantIvPresent": true
+          }
+        }
+      ]
+    }
+  },
+  "segmentEncryption": {
+    "cencVideo": {
+      "boxSize": 40,
+      "version": 0,
+      "flags": 2,
+      "sampleCount": 1,
+      "parsedSampleCount": 1,
+      "perSample": [
+        {
+          "ivBytes": 16,
+          "subsampleCount": 1,
+          "subsamples": [
+            {
+              "clearBytes": 130,
+              "protectedBytes": 14528
+            }
+          ]
+        }
+      ]
+    },
+    "cencAudio": {
+      "boxSize": 96,
+      "version": 0,
+      "flags": 0,
+      "sampleCount": 5,
+      "parsedSampleCount": 5,
+      "perSample": [
+        {
+          "ivBytes": 16
+        },
+        {
+          "ivBytes": 16
+        },
+        {
+          "ivBytes": 16
+        },
+        {
+          "ivBytes": 16
+        },
+        {
+          "ivBytes": 16
+        }
+      ]
+    },
+    "cbcsVideo": {
+      "boxSize": 24,
+      "version": 0,
+      "flags": 2,
+      "sampleCount": 1,
+      "parsedSampleCount": 1,
+      "perSample": [
+        {
+          "ivBytes": 0,
+          "subsampleCount": 1,
+          "subsamples": [
+            {
+              "clearBytes": 35,
+              "protectedBytes": 14623
+            }
+          ]
+        }
+      ]
+    },
+    "cbcsAudio": {
+      "boxSize": 16,
+      "version": 0,
+      "flags": 0,
+      "sampleCount": 5,
+      "parsedSampleCount": 5,
+      "perSample": [
+        {
+          "ivBytes": 0
+        },
+        {
+          "ivBytes": 0
+        },
+        {
+          "ivBytes": 0
+        },
+        {
+          "ivBytes": 0
+        },
+        {
+          "ivBytes": 0
+        }
+      ]
+    }
+  },
+  "thumbnails": {
+    "url": "https://archive2.hsk.st.nhk/npd4/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/thumbnails.json",
+    "httpStatus": 200,
+    "bytes": 250,
+    "topLevelType": "dict",
+    "itemCount": 7
+  }
+}

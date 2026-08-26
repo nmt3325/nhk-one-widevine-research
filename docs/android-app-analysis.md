@@ -227,7 +227,7 @@ G1 `m3000`の初期化セグメントから復元した実コーデック設定:
 
 - DVR: ライブプレイリストは`?dvr=1`等でも同じローリングプレイリスト（4セグメント）を返す。アプリのDVR再生は`getDvrVideoForPublication`で番組のVOD形式ディスクリプタへ切り替える実装
 - DASH: アプリコードに`.mpd`参照はなく、`.mpd`パスは403。このアプリはHLS専用
-- VOD: `archive2.hsk.st.nhk`上のディスクリプタは認証なしでは403。VODのディスクリプタURLはAPI応答の`detailedVideoDescriptor`フィールドで配布され、認証フローが必要
+- VOD: 推測した固定パスは403だが、実URLはAPI応答の`detailedVideoDescriptor`フィールドから供給される。実アプリで取得したコンテンツ固有URLはHTTP 200で、descriptor・HLS・init segment・メディアセグメントを取得できた
 
 ## 10.6 動的再生の実測（アプリ実挙動）
 
@@ -245,6 +245,31 @@ G1 `m3000`の初期化セグメントから復元した実コーデック設定:
 | メディアセグメント | `.m4s`を継続取得（再生成功） |
 
 重要な確認: `need_L1_hd=true`の配信で、**L3エミュレーターではアプリが自動的にv1500（540p）を選択**した。1500超（720p/1080p）は選択されなかった。これは6.9のL3フォールバックロジックと動的に一致する。
+
+## 10.7 VOD動的再生の実測
+
+ホーム画面の「アイカタ〜大切な人の【イイところ】撮ってきてください〜」を開き、コンテンツ固有descriptorから暗号化VODを実再生した。
+
+| 項目 | 実測値 |
+| --- | --- |
+| descriptor | `https://archive2.hsk.st.nhk/npd4/7fe0-0400/20260825/04b4-1-3-b3315424da822ead42c86ee037308b7b/videoinfo-73ffe87e7c0ca515aadbd4de22e6c3be.json`（HTTP 200） |
+| descriptor構成 | 24 manifests（CENC 12 / CBCS 12）、`need_L1_hd=false`、`allow_multispeed=true` |
+| 実選択 | CENC `manifest_m1500.m3u8`、映像`v1500`、音声`am192` |
+| DRM | Widevine L3、`getKeyRequest`とライセンスPOSTを確認 |
+| VOD時間 | 映像288セグメント、1,724.357秒、`#EXT-X-ENDLIST`あり |
+| 字幕 | WebVTT 747セグメント、1,724.932秒 |
+| サムネイル | `thumbnails.json`とサムネイル画像の取得を確認 |
+
+CENC/CBCSの映像・音声について、init segmentはHEAD 200、Range GET 206、先頭メディアセグメントもRange GET 206だった。字幕の先頭VTTもHEAD 200 / Range GET 206で、`WEBVTT`ヘッダーを確認した。
+
+VOD init segmentの構造:
+
+- CENC: `schm=cenc`、`tenc` version 0、16-byte per-sample IV、Widevine PSSHを各init内に2個配置
+- CBCS: `schm=cbcs`、`tenc` version 1、16-byte constant IV、PSSHなし
+- 映像セグメント: CENC/CBCSとも`senc` flags=2でサブサンプル暗号化
+- 音声セグメント: CENCは16-byte per-sample IV、CBCSはconstant IVを使用
+
+実アプリはライセンスPOST後も暗号化された映像・音声セグメントを継続取得し、再生を継続した。機械可読結果は[`evidence/vod-dynamic-analysis.json`](../evidence/vod-dynamic-analysis.json)に収録している。
 
 ## 7. DRM・認証フロー
 
@@ -302,9 +327,9 @@ Android 14エミュレーター上でプロパティのみ照会した。
 
 ## 10. 動的解析上の留保
 
-日本経由でアプリの地域制限解除、番組API取得、ライブUI表示までは確認した。対象エミュレーターの今回の再生操作では、MediaDrmのライセンス要求完了までのイベントは記録されなかった。そのため、ライセンスURLとBearerヘッダーは静的コードからの確認、暗号化方式はHLSおよびfMP4 init segmentからの確認として区別している。
+日本経由でライブとVODの実再生を確認し、`MediaDrm.getKeyRequest`、WidevineライセンスPOST、暗号化セグメントの継続取得を記録した。ライセンスHTTPレスポンスコードと`provideKeyResponse()`完了イベントの専用計測は別途継続する。
 
-Web/VOD系はライブ用固定ディスクリプタとは異なり、コンテンツ固有の認可フローを持つため、今回確定したURL規則をそのままVODへ一般化しない。
+VODはライブ用固定descriptorとは異なり、API応答の`detailedVideoDescriptor`からコンテンツ固有URLを得る。今回の1コンテンツのURL構造を全VODへ一般化しない。
 
 ## 10.5 メディアセグメントの取得可否
 
