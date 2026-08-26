@@ -271,6 +271,18 @@ VOD init segmentの構造:
 
 実アプリはライセンスPOST後も暗号化された映像・音声セグメントを継続取得し、再生を継続した。機械可読結果は[`evidence/vod-dynamic-analysis.json`](../evidence/vod-dynamic-analysis.json)に収録している。
 
+## 10.8 暗号化状態でのダウンロード再現
+
+ターミナルから暗号化されたままのVODを取得できることを確認した。`scripts/05-download-encrypted-vod.py`はメディアプレイリストのinitセグメントと`.m4s`セグメントをそのまま保存し、任意で連結fMP4を出力する。
+
+検証結果（CENC v1500、先頭2セグメント）:
+
+- init: 987バイト、`ftyp`(iso5)、`encv`、`frma=avc1`、`schm=cenc`、`tenc`、Widevine PSSH×2
+- セグメント: `styp`で開始、`moof`/`senc`を含む暗号化fMP4
+- 連結ファイル: init + セグメントのバイト列をそのまま連結（暗号化状態を維持）
+
+音声（`am192`）やCBCS経路（`cbcs/v1500`など）も同じ手順で取得できる。
+
 ## 7. DRM・認証フロー
 
 静的解析で確認した処理:

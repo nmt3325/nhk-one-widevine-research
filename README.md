@@ -31,6 +31,27 @@ python3 scripts/04-live-manifest-probe.py \
   --output android-live-manifest-summary.json
 ```
 
+## 暗号化されたままの動画ダウンロード
+
+VODのメディアプレイリストURLを指定すると、initセグメントと`.m4s`セグメントを復号せずそのまま保存できます。`--concat`で連結した単一fMP4（暗号化されたまま）も出力できます。
+
+```bash
+# 映像（CENC/v1500）を暗号化されたまま取得し、連結fMP4を出力
+python3 scripts/05-download-encrypted-vod.py \
+  --playlist 'https://archive2.hsk.st.nhk/npd4/.../cenc/v1500/playlist.m3u8' \
+  --output out/cenc-v1500 --concat out/cenc-v1500.mp4
+
+# 試験用に先頭数セグメントのみ
+python3 scripts/05-download-encrypted-vod.py \
+  --playlist '<media-playlist-url>' --output out/test --max-segments 2
+
+# マスタープレイリストから全バリアントを一括取得
+python3 scripts/05-download-encrypted-vod.py \
+  --master '<master-playlist-url>' --output out/all
+```
+
+出力は`ftyp`/`encv`/`schm=cenc`/`tenc`/`pssh`を含む暗号化fMP4であり、メディアセグメントは`styp`/`moof`/`senc`構造のままです（復号は行いません）。
+
 
 ## 注意
 
