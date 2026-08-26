@@ -1,0 +1,85 @@
+{
+  "measuredAt": "2026-08-26T10:42:41+09:00",
+  "tests": [
+    {
+      "mode": "cenc",
+      "kind": "video",
+      "playlistHttpStatus": 200,
+      "segmentCountObserved": 4,
+      "firstSegmentUrl": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/cenc/v3000/mediaseg20260826104144491.m4s",
+      "headStatus": 200,
+      "headContentType": "binary/octet-stream",
+      "headContentLength": "2176553",
+      "rangeGetStatus": 206,
+      "rangeContentRange": "bytes 0-1023/2176553",
+      "rangeContentType": "binary/octet-stream",
+      "rangeBytesReceived": 1024,
+      "firstBoxMarkers": [
+        "styp",
+        "moof",
+        "sidx"
+      ],
+      "containsClearFtyp": false
+    },
+    {
+      "mode": "cenc",
+      "kind": "audio",
+      "playlistHttpStatus": 200,
+      "segmentCountObserved": 4,
+      "firstSegmentUrl": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/cenc/am192/mediaseg20260826104150506.m4s",
+      "headStatus": 200,
+      "headContentType": "binary/octet-stream",
+      "headContentLength": "161542",
+      "rangeGetStatus": 206,
+      "rangeContentRange": "bytes 0-1023/161542",
+      "rangeContentType": "binary/octet-stream",
+      "rangeBytesReceived": 1024,
+      "firstBoxMarkers": [
+        "styp",
+        "moof",
+        "sidx"
+      ],
+      "containsClearFtyp": false
+    },
+    {
+      "mode": "cbcs",
+      "kind": "video",
+      "playlistHttpStatus": 200,
+      "segmentCountObserved": 4,
+      "firstSegmentUrl": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/cbcs/v3000/mediaseg20260826104150497.m4s",
+      "headStatus": 200,
+      "headContentType": "binary/octet-stream",
+      "headContentLength": "2092133",
+      "rangeGetStatus": 206,
+      "rangeContentRange": "bytes 0-1023/2092133",
+      "rangeContentType": "binary/octet-stream",
+      "rangeBytesReceived": 1024,
+      "firstBoxMarkers": [
+        "styp",
+        "moof",
+        "sidx"
+      ],
+      "containsClearFtyp": false
+    },
+    {
+      "mode": "cbcs",
+      "kind": "audio",
+      "playlistHttpStatus": 200,
+      "segmentCountObserved": 4,
+      "firstSegmentUrl": "https://simul2.hsk.st.nhk/npd4/vs1a/7fe0-0400/cbcs/am192/mediaseg20260826104150506.m4s",
+      "headStatus": 200,
+      "headContentType": "binary/octet-stream",
+      "headContentLength": "157046",
+      "rangeGetStatus": 206,
+      "rangeContentRange": "bytes 0-1023/157046",
+      "rangeContentType": "binary/octet-stream",
+      "rangeBytesReceived": 1024,
+      "firstBoxMarkers": [
+        "styp",
+        "moof",
+        "sidx"
+      ],
+      "containsClearFtyp": false
+    }
+  ]
+}
