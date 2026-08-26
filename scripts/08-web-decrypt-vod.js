@@ -99,7 +99,7 @@ function fetchUrl(url, options) {
   return new Promise(function (resolve, reject) {
     var parsed = new URLP(url);
     var lib = parsed.protocol === 'https:' ? https : http;
-    var headers = { 'User-Agent': options.userAgent || 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36' };
+    var headers = { 'Referer': 'https://www.web.nhk/', 'User-Agent': options.userAgent || 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36' };
     if (options.bearerToken) {
       headers['Authorization'] = options.bearerToken.startsWith('Bearer ') ? options.bearerToken : 'Bearer ' + options.bearerToken;
     }
@@ -575,7 +575,7 @@ async function main() {
   // --- マスタープレイリストを解析 ---
   log('Parsing master playlist...');
   var mResp = await fetchUrl(masterUrl, { bearerToken: bearerToken });
-  var mText = mResp.data.toString('utf-8');
+  var mText = mResp.data.toString("utf-8");
   var mpl = parseMasterPlaylist(mText, masterUrl);
   log('  Variants: ' + mpl.variants.length + ', Audio: ' + mpl.audios.length + ', Subtitles: ' + mpl.subtitles.length);
   mpl.variants.sort(function (a, b) { return b.bandwidth - a.bandwidth; });
@@ -588,6 +588,16 @@ async function main() {
   if (!videoUrl) { log('Error: No video playlist URL'); process.exit(1); }
 
   var maxSegments = opts.maxSegments ? parseInt(opts.maxSegments) : null;
+
+  // --- キャプチャのみモード ---
+  if (opts.captureOnly) {
+    log('\nCapture mode: Saving captured data...');
+    var cap = { bearerToken: bearerToken, descriptorUrl: descriptorUrl, masterUrl: masterUrl, videoUrl: videoUrl, audioUrl: audioUrl, subtitleUrl: subtitleUrl, timestamp: new Date().toISOString() };
+    var capPath = path.join(workDir, 'capture.json');
+    fs.writeFileSync(capPath, JSON.stringify(cap, null, 2));
+    log('  Saved to: ' + capPath);
+    return;
+  }
 
   // --- 動画セグメントをダウンロード ---
   log('[1/4] Downloading video...');
